@@ -26,8 +26,6 @@ import butterknife.ButterKnife;
 public class PlotActivity extends AppCompatActivity {
 
     public static final String TAG = "ChartActivity";
-    private SensorManager sensorManager;
-    private Sensor sensor;
 
     @BindView(R.id.accChartID)
     LineChart accChart;
@@ -37,6 +35,9 @@ public class PlotActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_plot);
         ButterKnife.bind(this);
+
+        //AccSensor accSensor = new AccSensor();
+        //accSensor.RegisterSensorManager();
 
         //chart options
         accChart.setKeepPositionOnRotation(true);

@@ -18,7 +18,6 @@ import butterknife.OnClick;
 
 public class StartActivity extends AppCompatActivity {
 
-    private SensorManager sensorManager;
     @BindView(R.id.startTestID)
     Button startTest;
 
@@ -34,14 +33,5 @@ public class StartActivity extends AppCompatActivity {
         setContentView(R.layout.activity_start);
         ButterKnife.bind(this);
 
-        sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        if (sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) == null) {
-            new AlertDialog.Builder(this)
-                    .setTitle("Error")
-                    .setMessage("Nie wykryto akcelerometru. Nie można przeprowadzić badania.")
-                    .setPositiveButton(android.R.string.ok, null)
-                    .setIcon(android.R.drawable.ic_dialog_alert)
-                    .show();
-        }
     }
 }

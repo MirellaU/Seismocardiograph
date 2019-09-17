@@ -1,31 +1,44 @@
 package com.example.mirella.seismocardiograph;
 
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.support.v7.app.AlertDialog;
 
-public class AccSensor implements SensorEventListener {
+
+public class AccSensor extends Activity implements SensorEventListener {
+
+    private SensorManager mSensorManager;
+    private Sensor mAccelerometer;
+    Intent intent;
 
     private float lastX, lastY, lastZ;
-
-    private SensorManager sensorManager;
-    private Sensor acc;
 
     private float deltaX = 0;
     private float deltaY = 0;
     private float deltaZ = 0;
 
-    public void RegisterSensorManager() {
-        acc = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        sensorManager.registerListener(this,
-                sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
-                SensorManager.SENSOR_DELAY_FASTEST);
+    public AccSensor(){
+        if (mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) != null) {
+            mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+            mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+
+        } else {
+            new AlertDialog.Builder(this)
+                    .setTitle("Error")
+                    .setMessage("Nie wykryto akcelerometru. Nie można przeprowadzić badania.")
+                    .setPositiveButton(android.R.string.ok, null)
+                    .setIcon(android.R.drawable.ic_dialog_alert)
+                    .show();
+        }
     }
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-
         // get the change of the x,y,z values of the accelerometer
         deltaX = Math.abs(lastX - event.values[0]);
         deltaY = Math.abs(lastY - event.values[1]);
@@ -43,6 +56,7 @@ public class AccSensor implements SensorEventListener {
         lastX = event.values[0];
         lastY = event.values[1];
         lastZ = event.values[2];
+
     }
 
     @Override
