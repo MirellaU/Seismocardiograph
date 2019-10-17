@@ -67,13 +67,13 @@ public class AccService extends JobIntentService implements SensorEventListener 
         deltaY = Math.abs(lastY - event.values[1]);
         deltaZ = Math.abs(lastZ - event.values[2]);
 
-        // if the change is below 2, it is just plain noise
-        if (deltaX < 2)
-            deltaX = 0;
-        if (deltaY < 2)
-            deltaY = 0;
-        if (deltaZ < 2)
-            deltaZ = 0;
+        // if the change is below 1, it is just plain noise
+//        if (deltaX < 1)
+//            deltaX = 0;
+//        if (deltaY < 1)
+//            deltaY = 0;
+//        if (deltaZ < 1)
+//            deltaZ = 0;
 
         // set the last know values of x,y,z
         lastX = event.values[0];
@@ -82,12 +82,12 @@ public class AccService extends JobIntentService implements SensorEventListener 
 
         //accValues.add(deltaX);
         //accValues.add(deltaY);
-        accValues.add(deltaZ);
-        Log.d(TAG, accValues.toString());
-        if (accValues.size()!=0) {
+//        accValues.add(deltaZ);
+//        Log.d(TAG, accValues.toString());
+//        if (accValues.size()!=0) {
             Send();
-        } else{}
-        accValues.clear();
+//        } else{}
+//        accValues.clear();
 //        final float alpha = 0.8;
 //
 //        // Isolate the force of gravity with the low-pass filter.
@@ -104,8 +104,8 @@ public class AccService extends JobIntentService implements SensorEventListener 
 
     protected void Send() {
         Intent accValuesIntent = new Intent("NEW_ACC_VALUES");
-        accValuesIntent.putExtra("ACC_VALUES", accValues);
-        Log.d(TAG,accValues.toString());
+        accValuesIntent.putExtra("ACC_VALUES", deltaZ);
+        Log.d(TAG, String.valueOf(deltaZ));
         sendBroadcast(accValuesIntent);
     }
 

@@ -24,7 +24,13 @@ import com.github.mikephil.charting.formatter.IAxisValueFormatter;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.Locale;
+import java.util.Queue;
+import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 import butterknife.BindView;
@@ -35,7 +41,9 @@ public class PlotActivity extends AppCompatActivity {
     public static final String TAG = "PlotActivity";
     public static String ACC_VALUES = "NEW_ACC_VALUES";
 
-    public ArrayList<Float> accValues = new ArrayList<Float>();
+    public float accVal;
+    public int i = 0;
+    ArrayList<Entry> values = new ArrayList<>();
     IntentFilter accValuesIntentFilter;
 
     @BindView(R.id.accChartID)
@@ -45,10 +53,19 @@ public class PlotActivity extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             if(intent.getAction().equals(ACC_VALUES)) {
-                Log.d(TAG,"I'm in BR");
-                accValues = (ArrayList<Float>) intent.getSerializableExtra("ACC_VALUES");
-                Log.d(TAG,accValues.toString());
+                //Log.d(TAG,"I'm in BR");
+                //accVal = (ArrayList<Float>) intent.getSerializableExtra("ACC_VALUES");
+                accVal = intent.getFloatExtra("ACC_VALUES",accVal);
+//                if(accValues.size()!=0) {
+//                    accPlotValues.add(accValues);
+//                }
+                Log.d(TAG, String.valueOf(accVal));
                 addAccValuesEntry();
+//                accPlotValues.add(accVal);
+//                if(accPlotValues.size()>11) {
+//                    addAccValuesEntry();
+//                    accPlotValues.remove();
+//                }
             }
         }
     };
@@ -61,23 +78,22 @@ public class PlotActivity extends AppCompatActivity {
             accChart.setData(new LineData());
         }
 
-        ArrayList<Entry> values = new ArrayList<>();
-
-        for (int i = 0; i < accValues.size(); i++) {
-            values.add(new Entry(i,(accValues.get(i))));
-        }
-
-        removeDataSet(accChart);
+        values.add(new Entry(i,accVal));
+        //accValues.add(accVal);
+        //for (int i = 0; i < 11; i++) {
+        //values.add(new Entry(1, accPlotValues.peek()));
+        //}
 
         LineDataSet set = new LineDataSet(values, "Acc Data");
-        set.setLineWidth(2.5f);
-        set.setCircleRadius(4.5f);
 
+        set.setLineWidth(2.5f);
+        set.setDrawCircles(false);
+        set.setCircleRadius(0f);
         set.setColor(Color.BLUE);
         set.setCircleColor(Color.BLUE);
         set.setHighLightColor(Color.BLUE);
         set.setValueTextSize(0f);
-        set.setDrawCircleHole(true);
+        set.setDrawCircleHole(false);
         set.setCircleHoleColor(Color.BLUE);
         set.setMode(LineDataSet.Mode.CUBIC_BEZIER);
 //        set.setValueTextColor(Color.RED);
@@ -86,12 +102,20 @@ public class PlotActivity extends AppCompatActivity {
         data.notifyDataChanged();
         accChart.notifyDataSetChanged();
         accChart.invalidate();
+        //accChart.animateX(2000);
+
+        if(values.size()>20) {
+            values.remove(1);
+            //removeDataSet(accChart);
+        } else{
+            i++;
+        }
     }
 
     private void removeDataSet(LineChart chart) {
         LineData data = chart.getData();
         if (data != null) {
-            data.removeDataSet(data.getDataSetByIndex(data.getDataSetCount() - 1));
+            data.removeDataSet(data.getDataSetByIndex(data.getDataSetCount()-1));
             chart.notifyDataSetChanged();
             chart.invalidate();
         }
@@ -108,14 +132,15 @@ public class PlotActivity extends AppCompatActivity {
         accChart.setKeepPositionOnRotation(true);
         accChart.getDescription().setEnabled(true);
         accChart.getDescription().setText("");
+        accChart.getAxisRight().setDrawLabels(false);
 
-        LineData data = new LineData();
+        final LineData data = new LineData();
         accChart.setData(data);
 
         YAxis leftAxis = accChart.getAxisLeft();
         leftAxis.setDrawGridLines(false); // no grid lines
         leftAxis.setAxisMinimum(0f); // start at 0
-        //leftAxis.setAxisMaximum(100f); // the axis maximum is 100
+        leftAxis.setAxisMaximum(15f); // the axis maximum is 100
 
         //YAxis rightAxis = accChart.getAxisRight();
         //rightAxis.setDrawGridLines(false); // no grid lines
@@ -124,20 +149,24 @@ public class PlotActivity extends AppCompatActivity {
 
         XAxis xAxis = accChart.getXAxis();
         xAxis.setDrawGridLines(false); //no grid lines
-        accChart.getXAxis().setDrawLabels(false);
+        accChart.getXAxis().setDrawLabels(true);
+        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
 
         IAxisValueFormatter xAxisFormatter = new IAxisValueFormatter() {
-            private SimpleDateFormat mFormat = new SimpleDateFormat("dd MMM HH:mm");
+            //private SimpleDateFormat mFormat = new SimpleDateFormat("hh:mm:ss", Locale.GERMAN).format(d);
             @Override
             public String getFormattedValue(float value, AxisBase axis) {
-                long millis = TimeUnit.HOURS.toMillis((long) value);
-                return mFormat.format(new Date(millis));
+                //long millis = TimeUnit.HOURS.toMillis((long) value);
+                Date date = new Date(Float.valueOf(value).longValue());
+                SimpleDateFormat sdf = new SimpleDateFormat("hh:mm:ss");
+                sdf.setTimeZone(TimeZone.getDefault());
+                String time = sdf.format(date);
+                return time;
             }
         };
         xAxis.setValueFormatter(xAxisFormatter);
 
         registerReceiver(accValuesReceiver, accValuesIntentFilter);
-        Log.d(TAG,"Register the IF and BR");
     }
 
     @Override
