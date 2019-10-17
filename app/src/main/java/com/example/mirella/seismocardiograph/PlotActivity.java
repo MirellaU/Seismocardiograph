@@ -79,37 +79,42 @@ public class PlotActivity extends AppCompatActivity {
         }
 
         values.add(new Entry(i,accVal));
-        //accValues.add(accVal);
-        //for (int i = 0; i < 11; i++) {
-        //values.add(new Entry(1, accPlotValues.peek()));
-        //}
 
-        LineDataSet set = new LineDataSet(values, "Acc Data");
+//        for(int j=i;j<20;j++){
+//            plottedValues.add(values.get(i-20));
+//        }
+
+        LineDataSet set = new LineDataSet(values, null);
 
         set.setLineWidth(2.5f);
         set.setDrawCircles(false);
-        set.setCircleRadius(0f);
-        set.setColor(Color.BLUE);
-        set.setCircleColor(Color.BLUE);
-        set.setHighLightColor(Color.BLUE);
+        //set.setCircleRadius(0f);
+        set.setColor(R.color.colorPrimary);
+        //set.setCircleColor(Color.BLUE);
+        set.setHighLightColor(R.color.colorPrimary);
         set.setValueTextSize(0f);
-        set.setDrawCircleHole(false);
-        set.setCircleHoleColor(Color.BLUE);
+        //set.setDrawCircleHole(false);
+        //set.setCircleHoleColor(Color.BLUE);
         set.setMode(LineDataSet.Mode.CUBIC_BEZIER);
 //        set.setValueTextColor(Color.RED);
 
         data.addDataSet(set);
+
         data.notifyDataChanged();
         accChart.notifyDataSetChanged();
-        accChart.invalidate();
+
+        accChart.setVisibleXRangeMaximum(20);
+        accChart.moveViewToX(i);
+        //accChart.invalidate();
         //accChart.animateX(2000);
 
-        if(values.size()>20) {
-            values.remove(1);
-            //removeDataSet(accChart);
-        } else{
-            i++;
-        }
+//        if(values.size()>20) {
+//            values.remove(1);
+//            values.clear();
+//            i=-1;
+//            //removeDataSet(accChart);
+//        }
+        i++;
     }
 
     private void removeDataSet(LineChart chart) {
@@ -133,6 +138,7 @@ public class PlotActivity extends AppCompatActivity {
         accChart.getDescription().setEnabled(true);
         accChart.getDescription().setText("");
         accChart.getAxisRight().setDrawLabels(false);
+        accChart.getLegend().setEnabled(false);
 
         final LineData data = new LineData();
         accChart.setData(data);
@@ -142,29 +148,24 @@ public class PlotActivity extends AppCompatActivity {
         leftAxis.setAxisMinimum(0f); // start at 0
         leftAxis.setAxisMaximum(15f); // the axis maximum is 100
 
-        //YAxis rightAxis = accChart.getAxisRight();
-        //rightAxis.setDrawGridLines(false); // no grid lines
-        //rightAxis.setAxisMinimum(0f); // start at 0
-        //rightAxis.setAxisMaximum(100f); // the axis maximum is 100
-
         XAxis xAxis = accChart.getXAxis();
         xAxis.setDrawGridLines(false); //no grid lines
         accChart.getXAxis().setDrawLabels(true);
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
 
-        IAxisValueFormatter xAxisFormatter = new IAxisValueFormatter() {
-            //private SimpleDateFormat mFormat = new SimpleDateFormat("hh:mm:ss", Locale.GERMAN).format(d);
-            @Override
-            public String getFormattedValue(float value, AxisBase axis) {
-                //long millis = TimeUnit.HOURS.toMillis((long) value);
-                Date date = new Date(Float.valueOf(value).longValue());
-                SimpleDateFormat sdf = new SimpleDateFormat("hh:mm:ss");
-                sdf.setTimeZone(TimeZone.getDefault());
-                String time = sdf.format(date);
-                return time;
-            }
-        };
-        xAxis.setValueFormatter(xAxisFormatter);
+//        IAxisValueFormatter xAxisFormatter = new IAxisValueFormatter() {
+//            //private SimpleDateFormat mFormat = new SimpleDateFormat("hh:mm:ss", Locale.GERMAN).format(d);
+//            @Override
+//            public String getFormattedValue(float value, AxisBase axis) {
+//                //long millis = TimeUnit.HOURS.toMillis((long) value);
+//                Date date = new Date(Float.valueOf(value).longValue());
+//                SimpleDateFormat sdf = new SimpleDateFormat("hh:mm:ss");
+//                sdf.setTimeZone(TimeZone.getDefault());
+//                String time = sdf.format(date);
+//                return time;
+//            }
+//        };
+//        xAxis.setValueFormatter(xAxisFormatter);
 
         registerReceiver(accValuesReceiver, accValuesIntentFilter);
     }
