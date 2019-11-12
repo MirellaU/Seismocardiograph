@@ -5,33 +5,21 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorManager;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.Button;
 
 import com.github.mikephil.charting.charts.LineChart;
-import com.github.mikephil.charting.components.AxisBase;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
-import com.github.mikephil.charting.formatter.IAxisValueFormatter;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.Locale;
-import java.util.Queue;
-import java.util.TimeZone;
-import java.util.concurrent.TimeUnit;
+import java.util.Collections;
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -41,10 +29,21 @@ public class PlotActivity extends AppCompatActivity {
     public static final String TAG = "PlotActivity";
     public static String ACC_VALUES = "NEW_ACC_VALUES";
 
-    public float accVal;
+    public double X,Y,Z;
+
+    public ArrayList<Double> accValues = new ArrayList<>();
+
+    ArrayList<Entry> xValues = new ArrayList<>();
+    ArrayList<Entry> yValues = new ArrayList<>();
+    ArrayList<Entry> zValues = new ArrayList<>();
+
     public int i = 0;
-    ArrayList<Entry> values = new ArrayList<>();
+
+    ArrayList <Float> TESTxValues = new ArrayList<>();
+
     IntentFilter accValuesIntentFilter;
+
+    private Handler mHandler = new Handler();
 
     @BindView(R.id.accChartID)
     LineChart accChart;
@@ -53,74 +52,130 @@ public class PlotActivity extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             if(intent.getAction().equals(ACC_VALUES)) {
-                //Log.d(TAG,"I'm in BR");
-                //accVal = (ArrayList<Float>) intent.getSerializableExtra("ACC_VALUES");
-                accVal = intent.getFloatExtra("ACC_VALUES",accVal);
-//                if(accValues.size()!=0) {
-//                    accPlotValues.add(accValues);
-//                }
-                Log.d(TAG, String.valueOf(accVal));
-                addAccValuesEntry();
-//                accPlotValues.add(accVal);
-//                if(accPlotValues.size()>11) {
-//                    addAccValuesEntry();
-//                    accPlotValues.remove();
-//                }
+                accValues = (ArrayList<Double>) intent.getSerializableExtra("ACC_VALUES");
+                X = accValues.get(0);
+                Y = accValues.get(1);
+                Z = accValues.get(2);
+
+//                Log.d(TAG, String.valueOf(xValues));
+//                Log.d(TAG,String.valueOf(yValues));
+//                Log.d(TAG,String.valueOf(zValues));
+
+                feedMultiple();
             }
         }
     };
 
     private void addAccValuesEntry() {
         LineData data = accChart.getData();
-
-        if (data == null) {
-            data = new LineData();
-            accChart.setData(new LineData());
-        }
-
-        values.add(new Entry(i,accVal));
-
-//        for(int j=i;j<20;j++){
-//            plottedValues.add(values.get(i-20));
+//
+//        if (data == null) {
+//            data = new LineData();
+//            accChart.setData(new LineData());
+//        }
+//
+//        LineData pitchData = accChart.getData();
+//
+//        if (pitchData == null) {
+//            pitchData = new LineData();
+//            accChart.setData(new LineData());
 //        }
 
-        LineDataSet set = new LineDataSet(values, null);
 
-        set.setLineWidth(2.5f);
-        set.setDrawCircles(false);
-        //set.setCircleRadius(0f);
-        set.setColor(R.color.colorPrimary);
-        //set.setCircleColor(Color.BLUE);
-        set.setHighLightColor(R.color.colorPrimary);
-        set.setValueTextSize(0f);
-        //set.setDrawCircleHole(false);
-        //set.setCircleHoleColor(Color.BLUE);
-        set.setMode(LineDataSet.Mode.CUBIC_BEZIER);
-//        set.setValueTextColor(Color.RED);
+        //ArrayList<Entry> zValues = new ArrayList<>();
 
-        data.addDataSet(set);
+        //for (int i = 0; i < TESTxValues.size(); i++) {
+            zValues.add(new Entry(i, (float) Z));
 
-        data.notifyDataChanged();
-        accChart.notifyDataSetChanged();
+//        yValues = new Entry(i,(float)Y);
+//        zValues = new Entry(i,(float)Z);
 
-        accChart.setVisibleXRangeMaximum(20);
-        accChart.moveViewToX(i);
-        //accChart.invalidate();
-        //accChart.animateX(2000);
+            //removeDataSet(accChart);
 
-//        if(values.size()>20) {
-//            values.remove(1);
-//            values.clear();
-//            i=-1;
-//            //removeDataSet(accChart);
-//        }
+            //LineDataSet XSet = new LineDataSet(Collections.singletonList(xValues), "X");
+            //LineDataSet YSet = new LineDataSet(Collections.singletonList(yValues), "Y");
+            LineDataSet ZSet = new LineDataSet(zValues, "Z");
+
+//        XSet.setLineWidth(2.5f);
+//        XSet.setDrawCircles(false);
+//        //XSet.setCircleRadius(0f);
+//        XSet.setColor(Color.RED);
+//        //XSet.setCircleColor(Color.BLUE);
+//        XSet.setHighLightColor(Color.RED);
+//        XSet.setValueTextSize(0f);
+//        //XSet.setDrawCircleHole(false);
+//        //XSet.setCircleHoleColor(Color.BLUE);
+//        XSet.setMode(LineDataSet.Mode.CUBIC_BEZIER);
+////        XSet.setValueTextColor(Color.RED);
+//
+//        YSet.setLineWidth(2.5f);
+//        YSet.setDrawCircles(false);
+//        //XSet.setCircleRadius(0f);
+//        YSet.setColor(Color.GREEN);
+//        //XSet.setCircleColor(Color.BLUE);
+//        YSet.setHighLightColor(Color.GREEN);
+//        YSet.setValueTextSize(0f);
+//        //XSet.setDrawCircleHole(false);
+//        //XSet.setCircleHoleColor(Color.BLUE);
+//        YSet.setMode(LineDataSet.Mode.CUBIC_BEZIER);
+////        XSet.setValueTextColor(Color.RED);
+
+            ZSet.setLineWidth(2.5f);
+            ZSet.setDrawCircles(false);
+            //XSet.setCircleRadius(0f);
+            ZSet.setColor(Color.BLUE);
+            //XSet.setCircleColor(Color.BLUE);
+            ZSet.setHighLightColor(Color.BLUE);
+            ZSet.setValueTextSize(0f);
+            //XSet.setDrawCircleHole(false);
+            //XSet.setCircleHoleColor(Color.BLUE);
+            ZSet.setMode(LineDataSet.Mode.CUBIC_BEZIER);
+
+//        data.addDataSet(XSet);
+//        //data.notifyDataChanged();
+//
+//        pitchData.addDataSet(XSet);
+            //pitchData.notifyDataChanged();
+
+            //data.addDataSet(XSet);
+            //data.addDataSet(YSet);
+            data.addDataSet(ZSet);
+            data.notifyDataChanged();
+
+            accChart.notifyDataSetChanged();
+
+            accChart.setVisibleXRangeMaximum(200);
+            accChart.moveViewToX(i);
+        //}
+        //
+
         i++;
+
+        //Log.d(TAG, String.valueOf(xValues));
+        //Log.d(TAG,String.valueOf(yValues));
+        //Log.d(TAG,String.valueOf(zValues));
+//        if(i>500){
+//            //i=0;
+//            //xValues.clear();
+//            //yValues.clear();
+//            zValues.clear();
+//            Log.d(TAG,zValues.toString());
+//        }
+    }
+
+    private void feedMultiple(){
+        mHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                addAccValuesEntry();
+            }
+        },100);
     }
 
     private void removeDataSet(LineChart chart) {
         LineData data = chart.getData();
         if (data != null) {
-            data.removeDataSet(data.getDataSetByIndex(data.getDataSetCount()-1));
+            data.removeDataSet(data.getDataSetByIndex(data.getDataSetCount() - 1));
             chart.notifyDataSetChanged();
             chart.invalidate();
         }
@@ -143,10 +198,11 @@ public class PlotActivity extends AppCompatActivity {
         final LineData data = new LineData();
         accChart.setData(data);
 
+        //accChart.fitScreen();
         YAxis leftAxis = accChart.getAxisLeft();
         leftAxis.setDrawGridLines(false); // no grid lines
-        leftAxis.setAxisMinimum(0f); // start at 0
-        leftAxis.setAxisMaximum(15f); // the axis maximum is 100
+        leftAxis.setAxisMinimum(-5f); // start at 0
+        leftAxis.setAxisMaximum(5f); // the axis maximum is 100
 
         XAxis xAxis = accChart.getXAxis();
         xAxis.setDrawGridLines(false); //no grid lines
