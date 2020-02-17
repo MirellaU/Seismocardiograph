@@ -84,7 +84,7 @@ public class AccService extends JobIntentService implements SensorEventListener 
     protected void Send() {
         Intent accValuesIntent = new Intent("NEW_ACC_VALUES");
         accValuesIntent.putExtra("ACC_VALUES", accValues);
-        Log.d(TAG, String.valueOf(accValues));
+        //Log.d(TAG, String.valueOf(accValues));
         sendBroadcast(accValuesIntent);
     }
 

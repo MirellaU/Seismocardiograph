@@ -2,13 +2,17 @@ package com.example.mirella.seismocardiograph;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
 import android.os.Handler;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.Button;
+import android.widget.Toast;
 
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.XAxis;
@@ -16,13 +20,21 @@ import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
+import com.opencsv.CSVWriter;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 
 public class PlotActivity extends AppCompatActivity {
 
@@ -37,16 +49,46 @@ public class PlotActivity extends AppCompatActivity {
     ArrayList<Entry> yValues = new ArrayList<>();
     ArrayList<Entry> zValues = new ArrayList<>();
 
-    public int i = 0;
+    public ArrayList<Double> accSaveXValues = new ArrayList<>();
+    public ArrayList<Double> accSaveYValues = new ArrayList<>();
+    public ArrayList<Double> accSaveZValues = new ArrayList<>();
 
-    ArrayList <Float> TESTxValues = new ArrayList<>();
-
+    public int i = 0,j=0,k=0;
     IntentFilter accValuesIntentFilter;
 
     private Handler mHandler = new Handler();
 
-    @BindView(R.id.accChartID)
-    LineChart accChart;
+    @BindView (R.id.saveID)
+    Button saveBtn;
+    @BindView(R.id.accXChartID)
+    LineChart accXChart;
+    @BindView(R.id.accYChartID)
+    LineChart accYChart;
+    @BindView(R.id.accZChartID)
+    LineChart accZChart;
+
+    @OnClick(R.id.saveID)
+    public void StopTest() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage("Czy chcesz zapisać wynik do pliku .csv?")
+                .setPositiveButton("Zapisz do pliku", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        Save();
+                        Toast.makeText(getApplicationContext(), "Zapisano pomyślnie", Toast.LENGTH_LONG).show();
+                        accSaveXValues.clear();
+                        accSaveYValues.clear();
+                        accSaveZValues.clear();
+                    }
+                })
+                .setNegativeButton("Nie zapisuj", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        dialog.cancel();
+                    }
+                });
+        // Create the AlertDialog object
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
 
     private BroadcastReceiver accValuesReceiver = new BroadcastReceiver() {
         @Override
@@ -57,119 +99,67 @@ public class PlotActivity extends AppCompatActivity {
                 Y = accValues.get(1);
                 Z = accValues.get(2);
 
-//                Log.d(TAG, String.valueOf(xValues));
-//                Log.d(TAG,String.valueOf(yValues));
-//                Log.d(TAG,String.valueOf(zValues));
+                xValues.add(new Entry(i, (float) X));
+                yValues.add(new Entry(j, (float) Y));
+                zValues.add(new Entry(k, (float) Z));
 
-                feedMultiple();
+                accSaveXValues.add(X);
+                accSaveYValues.add(Y);
+                accSaveZValues.add(Z);
+                //Log.d(TAG,yValues.toString());
+                //Log.d(TAG,zValues.toString());
+                //if (xValues.size() > 10) {
+                    feedMultiple();
+
+                    //xValues.clear();
+                    //yValues.clear();
+                    //zValues.clear();
+                //}
             }
         }
     };
 
-    private void addAccValuesEntry() {
-        LineData data = accChart.getData();
-//
-//        if (data == null) {
-//            data = new LineData();
-//            accChart.setData(new LineData());
-//        }
-//
-//        LineData pitchData = accChart.getData();
-//
-//        if (pitchData == null) {
-//            pitchData = new LineData();
-//            accChart.setData(new LineData());
-//        }
+    private void addAccValuesEntry(LineChart lineChart, ArrayList val) {
+        LineData data = lineChart.getData();
 
+        if (data == null) {
+            data = new LineData();
+            lineChart.setData(new LineData());
+        }
 
-        //ArrayList<Entry> zValues = new ArrayList<>();
+        LineDataSet lds = new LineDataSet(val, "X");
 
-        //for (int i = 0; i < TESTxValues.size(); i++) {
-            zValues.add(new Entry(i, (float) Z));
+        lds.setLineWidth(2.5f);
+        lds.setDrawCircles(false);
+        lds.setColor(Color.BLUE);
+        lds.setHighLightColor(Color.BLUE);
+        lds.setValueTextSize(0f);
 
-//        yValues = new Entry(i,(float)Y);
-//        zValues = new Entry(i,(float)Z);
+        data.addDataSet(lds);
+        data.notifyDataChanged();
 
-            //removeDataSet(accChart);
+        lineChart.notifyDataSetChanged();
 
-            //LineDataSet XSet = new LineDataSet(Collections.singletonList(xValues), "X");
-            //LineDataSet YSet = new LineDataSet(Collections.singletonList(yValues), "Y");
-            LineDataSet ZSet = new LineDataSet(zValues, "Z");
+        lineChart.setVisibleXRangeMaximum(100);
+        lineChart.moveViewToX(i);
 
-//        XSet.setLineWidth(2.5f);
-//        XSet.setDrawCircles(false);
-//        //XSet.setCircleRadius(0f);
-//        XSet.setColor(Color.RED);
-//        //XSet.setCircleColor(Color.BLUE);
-//        XSet.setHighLightColor(Color.RED);
-//        XSet.setValueTextSize(0f);
-//        //XSet.setDrawCircleHole(false);
-//        //XSet.setCircleHoleColor(Color.BLUE);
-//        XSet.setMode(LineDataSet.Mode.CUBIC_BEZIER);
-////        XSet.setValueTextColor(Color.RED);
-//
-//        YSet.setLineWidth(2.5f);
-//        YSet.setDrawCircles(false);
-//        //XSet.setCircleRadius(0f);
-//        YSet.setColor(Color.GREEN);
-//        //XSet.setCircleColor(Color.BLUE);
-//        YSet.setHighLightColor(Color.GREEN);
-//        YSet.setValueTextSize(0f);
-//        //XSet.setDrawCircleHole(false);
-//        //XSet.setCircleHoleColor(Color.BLUE);
-//        YSet.setMode(LineDataSet.Mode.CUBIC_BEZIER);
-////        XSet.setValueTextColor(Color.RED);
-
-            ZSet.setLineWidth(2.5f);
-            ZSet.setDrawCircles(false);
-            //XSet.setCircleRadius(0f);
-            ZSet.setColor(Color.BLUE);
-            //XSet.setCircleColor(Color.BLUE);
-            ZSet.setHighLightColor(Color.BLUE);
-            ZSet.setValueTextSize(0f);
-            //XSet.setDrawCircleHole(false);
-            //XSet.setCircleHoleColor(Color.BLUE);
-            ZSet.setMode(LineDataSet.Mode.CUBIC_BEZIER);
-
-//        data.addDataSet(XSet);
-//        //data.notifyDataChanged();
-//
-//        pitchData.addDataSet(XSet);
-            //pitchData.notifyDataChanged();
-
-            //data.addDataSet(XSet);
-            //data.addDataSet(YSet);
-            data.addDataSet(ZSet);
-            data.notifyDataChanged();
-
-            accChart.notifyDataSetChanged();
-
-            accChart.setVisibleXRangeMaximum(200);
-            accChart.moveViewToX(i);
-        //}
-        //
-
-        i++;
-
-        //Log.d(TAG, String.valueOf(xValues));
-        //Log.d(TAG,String.valueOf(yValues));
-        //Log.d(TAG,String.valueOf(zValues));
-//        if(i>500){
-//            //i=0;
-//            //xValues.clear();
-//            //yValues.clear();
-//            zValues.clear();
-//            Log.d(TAG,zValues.toString());
-//        }
+        //val.clear();
+        //removeDataSet(lineChart);
+        //i++;
     }
 
     private void feedMultiple(){
         mHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                addAccValuesEntry();
+                addAccValuesEntry(accXChart,xValues);
+                addAccValuesEntry(accYChart,yValues);
+                addAccValuesEntry(accZChart,zValues);
+                i++;
+                j++;
+                k++;
             }
-        },100);
+        },200);
     }
 
     private void removeDataSet(LineChart chart) {
@@ -189,26 +179,63 @@ public class PlotActivity extends AppCompatActivity {
 
         accValuesIntentFilter = new IntentFilter("NEW_ACC_VALUES");
         //chart options
-        accChart.setKeepPositionOnRotation(true);
-        accChart.getDescription().setEnabled(true);
-        accChart.getDescription().setText("");
-        accChart.getAxisRight().setDrawLabels(false);
-        accChart.getLegend().setEnabled(false);
+        accXChart.setKeepPositionOnRotation(true);
+        accXChart.getDescription().setEnabled(true);
+        accXChart.getDescription().setText("");
+        accXChart.getAxisRight().setDrawLabels(false);
+        accXChart.getLegend().setEnabled(false);
 
-        final LineData data = new LineData();
-        accChart.setData(data);
+        final LineData data1 = new LineData();
+        accXChart.setData(data1);
 
         //accChart.fitScreen();
-        YAxis leftAxis = accChart.getAxisLeft();
+        YAxis leftAxis = accXChart.getAxisLeft();
         leftAxis.setDrawGridLines(false); // no grid lines
         leftAxis.setAxisMinimum(-5f); // start at 0
         leftAxis.setAxisMaximum(5f); // the axis maximum is 100
 
-        XAxis xAxis = accChart.getXAxis();
+        XAxis xAxis = accXChart.getXAxis();
         xAxis.setDrawGridLines(false); //no grid lines
-        accChart.getXAxis().setDrawLabels(true);
+        accXChart.getXAxis().setDrawLabels(true);
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
 
+        accYChart.setKeepPositionOnRotation(true);
+        accYChart.getDescription().setEnabled(true);
+        accYChart.getDescription().setText("");
+        accYChart.getAxisRight().setDrawLabels(false);
+        accYChart.getLegend().setEnabled(false);
+
+        final LineData data2 = new LineData();
+        accYChart.setData(data2);
+
+        YAxis leftAxis2 = accYChart.getAxisLeft();
+        leftAxis2.setDrawGridLines(false); // no grid lines
+        leftAxis2.setAxisMinimum(-5f); // start at 0
+        leftAxis2.setAxisMaximum(5f); // the axis maximum is 100
+
+        XAxis xAxis2 = accYChart.getXAxis();
+        xAxis2.setDrawGridLines(false); //no grid lines
+        accYChart.getXAxis().setDrawLabels(true);
+        xAxis2.setPosition(XAxis.XAxisPosition.BOTTOM);
+
+        accZChart.setKeepPositionOnRotation(true);
+        accZChart.getDescription().setEnabled(true);
+        accZChart.getDescription().setText("");
+        accZChart.getAxisRight().setDrawLabels(false);
+        accZChart.getLegend().setEnabled(false);
+
+        final LineData data3 = new LineData();
+        accZChart.setData(data3);
+
+        YAxis leftAxis3 = accZChart.getAxisLeft();
+        leftAxis3.setDrawGridLines(false); // no grid lines
+        leftAxis3.setAxisMinimum(-5f); // start at 0
+        leftAxis3.setAxisMaximum(5f); // the axis maximum is 100
+
+        XAxis xAxis3 = accZChart.getXAxis();
+        xAxis3.setDrawGridLines(false); //no grid lines
+        accZChart.getXAxis().setDrawLabels(true);
+        xAxis3.setPosition(XAxis.XAxisPosition.BOTTOM);
 //        IAxisValueFormatter xAxisFormatter = new IAxisValueFormatter() {
 //            //private SimpleDateFormat mFormat = new SimpleDateFormat("hh:mm:ss", Locale.GERMAN).format(d);
 //            @Override
@@ -224,6 +251,37 @@ public class PlotActivity extends AppCompatActivity {
 //        xAxis.setValueFormatter(xAxisFormatter);
 
         registerReceiver(accValuesReceiver, accValuesIntentFilter);
+    }
+
+    private void Save(){
+        String timeStamp = new SimpleDateFormat(getString(R.string.dateFormat)).format(Calendar.getInstance().getTime());
+        //String csv = android.os.Environment.getExternalStorageDirectory() + "/Download"+"/dane_z_ACC";
+        //Log.d(TAG,csv);
+        try {
+                //String content = "Separe here integers by semi-colon";
+
+            File directory = getExternalFilesDir(null); //for external storage
+            String fileName = "dane_z_ACC.csv";
+            File file = new File(directory, fileName);
+                // if file doesnt exists, then create it
+            if (!directory.exists()) {
+                directory.createNewFile();
+            }
+
+            FileWriter fw = new FileWriter(file.getAbsoluteFile());
+            BufferedWriter bw = new BufferedWriter(fw);
+            bw.append(timeStamp);
+            bw.append("\n");
+            bw.append(accSaveXValues.toString());
+            bw.append("\n");
+            bw.append(accSaveYValues.toString());
+            bw.append("\n");
+            bw.append(accSaveZValues.toString());
+            bw.close();
+
+        } catch (IOException e) {
+                e.printStackTrace();
+            }
     }
 
     @Override

@@ -1,17 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_margin="20dp"
+    android:orientation="vertical"
     tools:context=".PlotActivity">
 
+    <Button
+        android:id="@+id/saveID"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/save"
+        android:background="@color/colorPrimary"
+        android:textColor="@color/white" />
+
     <com.github.mikephil.charting.charts.LineChart
-        android:id="@+id/accChartID"
+        android:id="@+id/accXChartID"
         android:layout_width="match_parent"
         android:layout_height="200dp"
         android:layout_centerHorizontal="true">
     </com.github.mikephil.charting.charts.LineChart>
 
-</RelativeLayout>
+    <com.github.mikephil.charting.charts.LineChart
+        android:id="@+id/accYChartID"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:layout_centerHorizontal="true">
+    </com.github.mikephil.charting.charts.LineChart>
+
+    <com.github.mikephil.charting.charts.LineChart
+        android:id="@+id/accZChartID"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:layout_centerHorizontal="true">
+    </com.github.mikephil.charting.charts.LineChart>
+
+</LinearLayout>
