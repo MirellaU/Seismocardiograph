@@ -20,7 +20,6 @@ import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
-import com.opencsv.CSVWriter;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -45,13 +44,9 @@ public class PlotActivity extends AppCompatActivity {
 
     public ArrayList<Double> accValues = new ArrayList<>();
 
-    ArrayList<Entry> xValues = new ArrayList<>();
-    ArrayList<Entry> yValues = new ArrayList<>();
-    ArrayList<Entry> zValues = new ArrayList<>();
-
-    public ArrayList<Double> accSaveXValues = new ArrayList<>();
-    public ArrayList<Double> accSaveYValues = new ArrayList<>();
-    public ArrayList<Double> accSaveZValues = new ArrayList<>();
+    public ArrayList<Float> accSaveXValues = new ArrayList<>();
+    public ArrayList<Float> accSaveYValues = new ArrayList<>();
+    public ArrayList<Float> accSaveZValues = new ArrayList<>();
 
     public int i = 0,j=0,k=0;
     IntentFilter accValuesIntentFilter;
@@ -99,22 +94,16 @@ public class PlotActivity extends AppCompatActivity {
                 Y = accValues.get(1);
                 Z = accValues.get(2);
 
-                xValues.add(new Entry(i, (float) X));
-                yValues.add(new Entry(j, (float) Y));
-                zValues.add(new Entry(k, (float) Z));
+                accSaveXValues.add((float)X);
+                accSaveYValues.add((float)Y);
+                accSaveZValues.add((float)Z);
 
-                accSaveXValues.add(X);
-                accSaveYValues.add(Y);
-                accSaveZValues.add(Z);
-                //Log.d(TAG,yValues.toString());
-                //Log.d(TAG,zValues.toString());
-                //if (xValues.size() > 10) {
-                    feedMultiple();
+                addAccValuesEntry(accXChart, accSaveXValues);
+                addAccValuesEntry(accYChart, accSaveYValues);
+                addAccValuesEntry(accZChart, accSaveZValues);
 
-                    //xValues.clear();
-                    //yValues.clear();
-                    //zValues.clear();
-                //}
+                //accSaveXValues.clear();
+
             }
         }
     };
@@ -127,7 +116,15 @@ public class PlotActivity extends AppCompatActivity {
             lineChart.setData(new LineData());
         }
 
-        LineDataSet lds = new LineDataSet(val, "X");
+        ArrayList<Entry> values = new ArrayList<>();
+
+        for(int i=0 ; i<val.size();i++) {
+            values.add(new Entry(i, (float)val.get(i)));
+            //i++;
+        }
+        removeDataSet(lineChart);
+
+        LineDataSet lds = new LineDataSet(values, "");
 
         lds.setLineWidth(2.5f);
         lds.setDrawCircles(false);
@@ -139,28 +136,31 @@ public class PlotActivity extends AppCompatActivity {
         data.notifyDataChanged();
 
         lineChart.notifyDataSetChanged();
+        lineChart.invalidate();
 
         lineChart.setVisibleXRangeMaximum(100);
-        lineChart.moveViewToX(i);
+        lineChart.moveViewToX(j);
 
         //val.clear();
-        //removeDataSet(lineChart);
-        //i++;
+        j++;
+
+        if (val.size()>1000){
+            val.clear();
+        }
+
     }
 
-    private void feedMultiple(){
-        mHandler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                addAccValuesEntry(accXChart,xValues);
-                addAccValuesEntry(accYChart,yValues);
-                addAccValuesEntry(accZChart,zValues);
-                i++;
-                j++;
-                k++;
-            }
-        },200);
-    }
+//    private void feedMultiple(){
+//        mHandler.postDelayed(new Runnable() {
+//            @Override
+//            public void run() {
+//                addAccValuesEntry(accXChart,xValues);
+//                //removeDataSet();
+//                //addAccValuesEntry(accYChart,yValues);
+//                //addAccValuesEntry(accZChart,zValues);
+//            }
+//        },8);
+//    }
 
     private void removeDataSet(LineChart chart) {
         LineData data = chart.getData();
@@ -169,88 +169,9 @@ public class PlotActivity extends AppCompatActivity {
             chart.notifyDataSetChanged();
             chart.invalidate();
         }
-    }
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_plot);
-        ButterKnife.bind(this);
-
-        accValuesIntentFilter = new IntentFilter("NEW_ACC_VALUES");
-        //chart options
-        accXChart.setKeepPositionOnRotation(true);
-        accXChart.getDescription().setEnabled(true);
-        accXChart.getDescription().setText("");
-        accXChart.getAxisRight().setDrawLabels(false);
-        accXChart.getLegend().setEnabled(false);
-
-        final LineData data1 = new LineData();
-        accXChart.setData(data1);
-
-        //accChart.fitScreen();
-        YAxis leftAxis = accXChart.getAxisLeft();
-        leftAxis.setDrawGridLines(false); // no grid lines
-        leftAxis.setAxisMinimum(-5f); // start at 0
-        leftAxis.setAxisMaximum(5f); // the axis maximum is 100
-
-        XAxis xAxis = accXChart.getXAxis();
-        xAxis.setDrawGridLines(false); //no grid lines
-        accXChart.getXAxis().setDrawLabels(true);
-        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
-
-        accYChart.setKeepPositionOnRotation(true);
-        accYChart.getDescription().setEnabled(true);
-        accYChart.getDescription().setText("");
-        accYChart.getAxisRight().setDrawLabels(false);
-        accYChart.getLegend().setEnabled(false);
-
-        final LineData data2 = new LineData();
-        accYChart.setData(data2);
-
-        YAxis leftAxis2 = accYChart.getAxisLeft();
-        leftAxis2.setDrawGridLines(false); // no grid lines
-        leftAxis2.setAxisMinimum(-5f); // start at 0
-        leftAxis2.setAxisMaximum(5f); // the axis maximum is 100
-
-        XAxis xAxis2 = accYChart.getXAxis();
-        xAxis2.setDrawGridLines(false); //no grid lines
-        accYChart.getXAxis().setDrawLabels(true);
-        xAxis2.setPosition(XAxis.XAxisPosition.BOTTOM);
-
-        accZChart.setKeepPositionOnRotation(true);
-        accZChart.getDescription().setEnabled(true);
-        accZChart.getDescription().setText("");
-        accZChart.getAxisRight().setDrawLabels(false);
-        accZChart.getLegend().setEnabled(false);
-
-        final LineData data3 = new LineData();
-        accZChart.setData(data3);
-
-        YAxis leftAxis3 = accZChart.getAxisLeft();
-        leftAxis3.setDrawGridLines(false); // no grid lines
-        leftAxis3.setAxisMinimum(-5f); // start at 0
-        leftAxis3.setAxisMaximum(5f); // the axis maximum is 100
-
-        XAxis xAxis3 = accZChart.getXAxis();
-        xAxis3.setDrawGridLines(false); //no grid lines
-        accZChart.getXAxis().setDrawLabels(true);
-        xAxis3.setPosition(XAxis.XAxisPosition.BOTTOM);
-//        IAxisValueFormatter xAxisFormatter = new IAxisValueFormatter() {
-//            //private SimpleDateFormat mFormat = new SimpleDateFormat("hh:mm:ss", Locale.GERMAN).format(d);
-//            @Override
-//            public String getFormattedValue(float value, AxisBase axis) {
-//                //long millis = TimeUnit.HOURS.toMillis((long) value);
-//                Date date = new Date(Float.valueOf(value).longValue());
-//                SimpleDateFormat sdf = new SimpleDateFormat("hh:mm:ss");
-//                sdf.setTimeZone(TimeZone.getDefault());
-//                String time = sdf.format(date);
-//                return time;
-//            }
-//        };
-//        xAxis.setValueFormatter(xAxisFormatter);
-
-        registerReceiver(accValuesReceiver, accValuesIntentFilter);
+//        Log.d(TAG,"Przed:" + xValues.size());
+//        xValues.remove(i);
+//        Log.d(TAG,"Po: " + xValues.size());
     }
 
     private void Save(){
@@ -258,12 +179,11 @@ public class PlotActivity extends AppCompatActivity {
         //String csv = android.os.Environment.getExternalStorageDirectory() + "/Download"+"/dane_z_ACC";
         //Log.d(TAG,csv);
         try {
-                //String content = "Separe here integers by semi-colon";
-
             File directory = getExternalFilesDir(null); //for external storage
             String fileName = "dane_z_ACC.csv";
             File file = new File(directory, fileName);
-                // if file doesnt exists, then create it
+
+            // if file in directory not exists, create it
             if (!directory.exists()) {
                 directory.createNewFile();
             }
@@ -280,8 +200,61 @@ public class PlotActivity extends AppCompatActivity {
             bw.close();
 
         } catch (IOException e) {
-                e.printStackTrace();
-            }
+            e.printStackTrace();
+        }
+    }
+
+
+    private void chartConfiguration(LineChart chart){
+        chart.setKeepPositionOnRotation(true);
+        chart.getDescription().setEnabled(true);
+        chart.getDescription().setText("");
+        chart.getAxisRight().setDrawLabels(false);
+        chart.getLegend().setEnabled(false);
+
+        final LineData data = new LineData();
+        chart.setData(data);
+
+        //accChart.fitScreen();
+        YAxis leftAxis = chart.getAxisLeft();
+        leftAxis.setDrawGridLines(false); // no grid lines
+        leftAxis.setAxisMinimum(-5f); // start at -5
+        leftAxis.setAxisMaximum(5f); // the axis maximum is 5
+
+        XAxis xAxis = chart.getXAxis();
+        xAxis.setDrawGridLines(false); //no grid lines
+        chart.getXAxis().setDrawLabels(true);
+        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_plot);
+        ButterKnife.bind(this);
+
+        accValuesIntentFilter = new IntentFilter("NEW_ACC_VALUES");
+
+        //chart options
+        chartConfiguration(accXChart);
+        chartConfiguration(accYChart);
+        chartConfiguration(accZChart);
+
+//        IAxisValueFormatter xAxisFormatter = new IAxisValueFormatter() {
+//            //private SimpleDateFormat mFormat = new SimpleDateFormat("hh:mm:ss", Locale.GERMAN).format(d);
+//            @Override
+//            public String getFormattedValue(float value, AxisBase axis) {
+//                //long millis = TimeUnit.HOURS.toMillis((long) value);
+//                Date date = new Date(Float.valueOf(value).longValue());
+//                SimpleDateFormat sdf = new SimpleDateFormat("hh:mm:ss");
+//                sdf.setTimeZone(TimeZone.getDefault());
+//                String time = sdf.format(date);
+//                return time;
+//            }
+//        };
+//        xAxis.setValueFormatter(xAxisFormatter);
+
+        registerReceiver(accValuesReceiver, accValuesIntentFilter);
     }
 
     @Override

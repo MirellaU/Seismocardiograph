@@ -14,6 +14,16 @@
         android:layout_height="wrap_content"
         android:text="@string/test_start"
         android:background="@color/colorPrimary"
-        android:textColor="@color/white" />
+        android:textColor="@color/white"
+        android:layout_marginBottom="10dp"/>
+
+    <Button
+        android:id="@+id/showPlotID"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/show_plot"
+        android:background="@color/colorPrimary"
+        android:textColor="@color/white"
+        android:layout_marginBottom="10dp" />
 
 </LinearLayout>
