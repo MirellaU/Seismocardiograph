@@ -36,7 +36,7 @@ public class StartActivity extends AppCompatActivity {
         final Intent serviceIntent = new Intent(this, AccService.class);
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Informacja o badaniu")
-                .setMessage("Tu trzeba napisać o tym jak posługiwać się apką")
+                .setMessage("W celu poprawnego wykonania badania należy przyłożyć telefon na środku klatki piersiowej")
                 .setPositiveButton("OK", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         //Save();
@@ -54,6 +54,7 @@ public class StartActivity extends AppCompatActivity {
                 });
         // Create the AlertDialog object
         AlertDialog dialog = builder.create();
+        dialog.getWindow().getAttributes().windowAnimations = R.style.DialogAnimation;
         dialog.show();
         Log.d(TAG,"Start service");
         //AccService.enqueueWork(this, serviceIntent);

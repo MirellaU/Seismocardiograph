@@ -15,11 +15,13 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.components.AxisBase;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.formatter.IAxisValueFormatter;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -29,7 +31,10 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -48,10 +53,7 @@ public class PlotActivity extends AppCompatActivity {
     public ArrayList<Float> accSaveYValues = new ArrayList<>();
     public ArrayList<Float> accSaveZValues = new ArrayList<>();
 
-    public int i = 0,j=0,k=0;
     IntentFilter accValuesIntentFilter;
-
-    private Handler mHandler = new Handler();
 
     @BindView (R.id.saveID)
     Button saveBtn;
@@ -63,16 +65,13 @@ public class PlotActivity extends AppCompatActivity {
     LineChart accZChart;
 
     @OnClick(R.id.saveID)
-    public void StopTest() {
+    public void SaveDataToCSV() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setMessage("Czy chcesz zapisać wynik do pliku .csv?")
                 .setPositiveButton("Zapisz do pliku", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         Save();
                         Toast.makeText(getApplicationContext(), "Zapisano pomyślnie", Toast.LENGTH_LONG).show();
-                        accSaveXValues.clear();
-                        accSaveYValues.clear();
-                        accSaveZValues.clear();
                     }
                 })
                 .setNegativeButton("Nie zapisuj", new DialogInterface.OnClickListener() {
@@ -82,6 +81,7 @@ public class PlotActivity extends AppCompatActivity {
                 });
         // Create the AlertDialog object
         AlertDialog dialog = builder.create();
+        dialog.getWindow().getAttributes().windowAnimations = R.style.DialogAnimation;
         dialog.show();
     }
 
@@ -101,9 +101,6 @@ public class PlotActivity extends AppCompatActivity {
                 addAccValuesEntry(accXChart, accSaveXValues);
                 addAccValuesEntry(accYChart, accSaveYValues);
                 addAccValuesEntry(accZChart, accSaveZValues);
-
-                //accSaveXValues.clear();
-
             }
         }
     };
@@ -120,7 +117,6 @@ public class PlotActivity extends AppCompatActivity {
 
         for(int i=0 ; i<val.size();i++) {
             values.add(new Entry(i, (float)val.get(i)));
-            //i++;
         }
         removeDataSet(lineChart);
 
@@ -139,28 +135,12 @@ public class PlotActivity extends AppCompatActivity {
         lineChart.invalidate();
 
         lineChart.setVisibleXRangeMaximum(100);
-        lineChart.moveViewToX(j);
+        lineChart.moveViewToX(val.size());
 
-        //val.clear();
-        j++;
-
-        if (val.size()>1000){
-            val.clear();
+        if(val.size()>100) {
+            val.remove(val.size()-99);
         }
-
     }
-
-//    private void feedMultiple(){
-//        mHandler.postDelayed(new Runnable() {
-//            @Override
-//            public void run() {
-//                addAccValuesEntry(accXChart,xValues);
-//                //removeDataSet();
-//                //addAccValuesEntry(accYChart,yValues);
-//                //addAccValuesEntry(accZChart,zValues);
-//            }
-//        },8);
-//    }
 
     private void removeDataSet(LineChart chart) {
         LineData data = chart.getData();
@@ -169,9 +149,6 @@ public class PlotActivity extends AppCompatActivity {
             chart.notifyDataSetChanged();
             chart.invalidate();
         }
-//        Log.d(TAG,"Przed:" + xValues.size());
-//        xValues.remove(i);
-//        Log.d(TAG,"Po: " + xValues.size());
     }
 
     private void Save(){
@@ -211,6 +188,7 @@ public class PlotActivity extends AppCompatActivity {
         chart.getDescription().setText("");
         chart.getAxisRight().setDrawLabels(false);
         chart.getLegend().setEnabled(false);
+        chart.fitScreen();
 
         final LineData data = new LineData();
         chart.setData(data);
@@ -218,13 +196,24 @@ public class PlotActivity extends AppCompatActivity {
         //accChart.fitScreen();
         YAxis leftAxis = chart.getAxisLeft();
         leftAxis.setDrawGridLines(false); // no grid lines
-        leftAxis.setAxisMinimum(-5f); // start at -5
-        leftAxis.setAxisMaximum(5f); // the axis maximum is 5
+        leftAxis.setAxisMinimum(-1f); // start at -5
+        leftAxis.setAxisMaximum(1f); // the axis maximum is 5
 
         XAxis xAxis = chart.getXAxis();
         xAxis.setDrawGridLines(false); //no grid lines
         chart.getXAxis().setDrawLabels(true);
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+        xAxis.setGranularity(1f);
+
+        IAxisValueFormatter xAxisFormatter = new IAxisValueFormatter() {
+            // @Override
+            public String getFormattedValue(float value, AxisBase axis) {
+                SimpleDateFormat sdf = new SimpleDateFormat("hh:mm:ss", Locale.GERMAN);
+                String time = sdf.format(new Date());
+                return time;
+            }
+        };
+        xAxis.setValueFormatter(xAxisFormatter);
     }
 
     @Override
@@ -239,20 +228,6 @@ public class PlotActivity extends AppCompatActivity {
         chartConfiguration(accXChart);
         chartConfiguration(accYChart);
         chartConfiguration(accZChart);
-
-//        IAxisValueFormatter xAxisFormatter = new IAxisValueFormatter() {
-//            //private SimpleDateFormat mFormat = new SimpleDateFormat("hh:mm:ss", Locale.GERMAN).format(d);
-//            @Override
-//            public String getFormattedValue(float value, AxisBase axis) {
-//                //long millis = TimeUnit.HOURS.toMillis((long) value);
-//                Date date = new Date(Float.valueOf(value).longValue());
-//                SimpleDateFormat sdf = new SimpleDateFormat("hh:mm:ss");
-//                sdf.setTimeZone(TimeZone.getDefault());
-//                String time = sdf.format(date);
-//                return time;
-//            }
-//        };
-//        xAxis.setValueFormatter(xAxisFormatter);
 
         registerReceiver(accValuesReceiver, accValuesIntentFilter);
     }
