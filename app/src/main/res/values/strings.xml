@@ -2,7 +2,7 @@
     <string name="app_name">Seismocardiograph</string>
     <string name="test_start">Rozpocznij badanie</string>
     <string name="show_plot">Pokaż wykresy</string>
-    <string name="save">Zapisz wynik</string>
+    <string name="save">Zapisz wynik badania</string>
     <string name="dateFormat">dd-MM-yyyy</string>
 
 </resources>

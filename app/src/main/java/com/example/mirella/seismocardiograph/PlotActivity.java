@@ -6,11 +6,9 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
-import android.os.Handler;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.Button;
 import android.widget.Toast;
 
@@ -30,11 +28,8 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.Date;
-import java.util.List;
 import java.util.Locale;
-import java.util.TimeZone;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -48,6 +43,10 @@ public class PlotActivity extends AppCompatActivity {
     public double X,Y,Z;
 
     public ArrayList<Double> accValues = new ArrayList<>();
+
+    public ArrayList<Float> accXValues = new ArrayList<>();
+    public ArrayList<Float> accYValues = new ArrayList<>();
+    public ArrayList<Float> accZValues = new ArrayList<>();
 
     public ArrayList<Float> accSaveXValues = new ArrayList<>();
     public ArrayList<Float> accSaveYValues = new ArrayList<>();
@@ -72,6 +71,9 @@ public class PlotActivity extends AppCompatActivity {
                     public void onClick(DialogInterface dialog, int id) {
                         Save();
                         Toast.makeText(getApplicationContext(), "Zapisano pomyślnie", Toast.LENGTH_LONG).show();
+                        accSaveXValues.clear();
+                        accSaveYValues.clear();
+                        accSaveZValues.clear();
                     }
                 })
                 .setNegativeButton("Nie zapisuj", new DialogInterface.OnClickListener() {
@@ -94,13 +96,17 @@ public class PlotActivity extends AppCompatActivity {
                 Y = accValues.get(1);
                 Z = accValues.get(2);
 
+                accXValues.add((float)X);
+                accYValues.add((float)Y);
+                accZValues.add((float)Z);
+
                 accSaveXValues.add((float)X);
                 accSaveYValues.add((float)Y);
                 accSaveZValues.add((float)Z);
 
-                addAccValuesEntry(accXChart, accSaveXValues);
-                addAccValuesEntry(accYChart, accSaveYValues);
-                addAccValuesEntry(accZChart, accSaveZValues);
+                addAccValuesEntry(accXChart, accXValues);
+                addAccValuesEntry(accYChart, accYValues);
+                addAccValuesEntry(accZChart, accZValues);
             }
         }
     };
@@ -169,10 +175,13 @@ public class PlotActivity extends AppCompatActivity {
             BufferedWriter bw = new BufferedWriter(fw);
             bw.append(timeStamp);
             bw.append("\n");
+            bw.append("Oś X:");
             bw.append(accSaveXValues.toString());
             bw.append("\n");
+            bw.append("Oś Y:");
             bw.append(accSaveYValues.toString());
             bw.append("\n");
+            bw.append("Oś Z:");
             bw.append(accSaveZValues.toString());
             bw.close();
 
@@ -182,10 +191,10 @@ public class PlotActivity extends AppCompatActivity {
     }
 
 
-    private void chartConfiguration(LineChart chart){
+    private void chartConfiguration(LineChart chart, String label){
         chart.setKeepPositionOnRotation(true);
         chart.getDescription().setEnabled(true);
-        chart.getDescription().setText("");
+        chart.getDescription().setText(label);
         chart.getAxisRight().setDrawLabels(false);
         chart.getLegend().setEnabled(false);
         chart.fitScreen();
@@ -196,8 +205,8 @@ public class PlotActivity extends AppCompatActivity {
         //accChart.fitScreen();
         YAxis leftAxis = chart.getAxisLeft();
         leftAxis.setDrawGridLines(false); // no grid lines
-        leftAxis.setAxisMinimum(-1f); // start at -5
-        leftAxis.setAxisMaximum(1f); // the axis maximum is 5
+        leftAxis.setAxisMinimum(-1f); // start at -1
+        leftAxis.setAxisMaximum(1f); // the axis maximum is 1
 
         XAxis xAxis = chart.getXAxis();
         xAxis.setDrawGridLines(false); //no grid lines
@@ -225,9 +234,9 @@ public class PlotActivity extends AppCompatActivity {
         accValuesIntentFilter = new IntentFilter("NEW_ACC_VALUES");
 
         //chart options
-        chartConfiguration(accXChart);
-        chartConfiguration(accYChart);
-        chartConfiguration(accZChart);
+        chartConfiguration(accXChart,"Oś X");
+        chartConfiguration(accYChart,"Oś Y");
+        chartConfiguration(accZChart,"Oś Z");
 
         registerReceiver(accValuesReceiver, accValuesIntentFilter);
     }
