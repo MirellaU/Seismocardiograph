@@ -11,13 +11,6 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
-    <Button
-        android:id="@+id/saveID"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/save"
-        android:background="@color/colorPrimary"
-        android:textColor="@color/white" />
 
     <com.github.mikephil.charting.charts.LineChart
         android:id="@+id/accXChartID"

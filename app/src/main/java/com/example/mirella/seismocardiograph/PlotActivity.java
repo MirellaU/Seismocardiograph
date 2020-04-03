@@ -54,38 +54,12 @@ public class PlotActivity extends AppCompatActivity {
 
     IntentFilter accValuesIntentFilter;
 
-    @BindView (R.id.saveID)
-    Button saveBtn;
     @BindView(R.id.accXChartID)
     LineChart accXChart;
     @BindView(R.id.accYChartID)
     LineChart accYChart;
     @BindView(R.id.accZChartID)
     LineChart accZChart;
-
-    @OnClick(R.id.saveID)
-    public void SaveDataToCSV() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setMessage("Czy chcesz zapisać wynik do pliku .csv?")
-                .setPositiveButton("Zapisz do pliku", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        Save();
-                        Toast.makeText(getApplicationContext(), "Zapisano pomyślnie", Toast.LENGTH_LONG).show();
-                        accSaveXValues.clear();
-                        accSaveYValues.clear();
-                        accSaveZValues.clear();
-                    }
-                })
-                .setNegativeButton("Nie zapisuj", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        dialog.cancel();
-                    }
-                });
-        // Create the AlertDialog object
-        AlertDialog dialog = builder.create();
-        dialog.getWindow().getAttributes().windowAnimations = R.style.DialogAnimation;
-        dialog.show();
-    }
 
     private BroadcastReceiver accValuesReceiver = new BroadcastReceiver() {
         @Override
@@ -104,14 +78,14 @@ public class PlotActivity extends AppCompatActivity {
                 accSaveYValues.add((float)Y);
                 accSaveZValues.add((float)Z);
 
-                addAccValuesEntry(accXChart, accXValues);
-                addAccValuesEntry(accYChart, accYValues);
-                addAccValuesEntry(accZChart, accZValues);
+                addAccValuesEntry(accXChart, accXValues, Color.BLUE);
+                addAccValuesEntry(accYChart, accYValues, Color.GREEN);
+                addAccValuesEntry(accZChart, accZValues, Color.RED);
             }
         }
     };
 
-    private void addAccValuesEntry(LineChart lineChart, ArrayList val) {
+    private void addAccValuesEntry(LineChart lineChart, ArrayList val, int color) {
         LineData data = lineChart.getData();
 
         if (data == null) {
@@ -130,8 +104,8 @@ public class PlotActivity extends AppCompatActivity {
 
         lds.setLineWidth(2.5f);
         lds.setDrawCircles(false);
-        lds.setColor(Color.BLUE);
-        lds.setHighLightColor(Color.BLUE);
+        lds.setColor(color);
+        lds.setHighLightColor(color);
         lds.setValueTextSize(0f);
 
         data.addDataSet(lds);
@@ -195,6 +169,7 @@ public class PlotActivity extends AppCompatActivity {
         chart.setKeepPositionOnRotation(true);
         chart.getDescription().setEnabled(true);
         chart.getDescription().setText(label);
+        chart.getDescription().setTextSize(20);
         chart.getAxisRight().setDrawLabels(false);
         chart.getLegend().setEnabled(false);
         chart.fitScreen();

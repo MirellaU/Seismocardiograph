@@ -5,25 +5,16 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:layout_margin="20dp"
+    android:layout_margin="10dp"
     tools:context=".StartActivity">
 
-    <Button
-        android:id="@+id/startTestID"
+    <GridView
+        android:id="@+id/menuGridView"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/test_start"
-        android:background="@color/colorPrimary"
-        android:textColor="@color/white"
-        android:layout_marginBottom="10dp"/>
-
-    <Button
-        android:id="@+id/showPlotID"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/show_plot"
-        android:background="@color/colorPrimary"
-        android:textColor="@color/white"
-        android:layout_marginBottom="10dp" />
-
+        android:layout_height="match_parent"
+        android:numColumns="2"
+        android:verticalSpacing="5dp"
+        android:horizontalSpacing="5dp"
+        android:layout_gravity="center"/>
+<!--        android:background="?attr/selectableItemBackgroundBorderless"/>-->
 </LinearLayout>
