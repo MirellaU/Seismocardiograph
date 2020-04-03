@@ -15,6 +15,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.GridView;
@@ -38,6 +39,7 @@ public class StartActivity extends AppCompatActivity {
 
     public static final String TAG = "AccSensor";
     public static String ACC_VALUES = "NEW_ACC_VALUES";
+    boolean doubleTap = false;
 
     private Menu[] menu = {
             new Menu(R.string.test_start, R.drawable.start),
@@ -75,13 +77,14 @@ public class StartActivity extends AppCompatActivity {
                 .setMessage("W celu poprawnego wykonania badania należy przyłożyć telefon na środku klatki piersiowej")
                 .setPositiveButton("OK", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
+                        doubleTap=true;
                         startService(serviceIntent);
                         Toast.makeText(getApplicationContext(), "Badanie rozpoczęte", Toast.LENGTH_LONG).show();
                     }
                 })
                 .setNegativeButton("Nie chcę rozpoczynać badania", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
-
+                        doubleTap=false;
                     }
                 });
         //.setView();
@@ -99,13 +102,14 @@ public class StartActivity extends AppCompatActivity {
                 .setMessage("Czy na pewno chcesz przerwać badanie?")
                 .setPositiveButton("Tak", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
+                        doubleTap=false;
                         stopService(new Intent(StartActivity.this, AccService.class));
                         Toast.makeText(getApplicationContext(), "Badanie przerwane", Toast.LENGTH_LONG).show();
                     }
                 })
                 .setNegativeButton("Nie chcę przerywać badania", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
-
+                        doubleTap=true;
                     }
                 });
         //.setView();
@@ -113,7 +117,6 @@ public class StartActivity extends AppCompatActivity {
         AlertDialog dialog = builder.create();
         dialog.getWindow().getAttributes().windowAnimations = R.style.DialogAnimation;
         dialog.show();
-        Log.d(TAG,"Start service");
     }
 
     public void ShowPlot(){
@@ -197,14 +200,20 @@ public class StartActivity extends AppCompatActivity {
         menuGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent,
                                     View v, int position, long id){
-                if(position==0){
-                 StartTest();
+
+                if(position==0 && !doubleTap){
+                    StartTest();
                 }
-                else if (position==1){
+                else if (position==1 && doubleTap){
                     StopTest();
                 }
                 else if (position==2){
-                    SaveDataToCSV();
+                    if(!doubleTap)
+                    {
+                        Toast.makeText(getApplicationContext(),"Nie rozpoczęto badania!",Toast.LENGTH_LONG);
+                    } else {
+                        SaveDataToCSV();
+                    }
                 }
                 else if (position==3){
                     ShowPlot();

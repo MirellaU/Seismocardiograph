@@ -13,8 +13,8 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:numColumns="2"
-        android:verticalSpacing="5dp"
-        android:horizontalSpacing="5dp"
+        android:verticalSpacing="30dp"
+        android:horizontalSpacing="20dp"
         android:layout_gravity="center"/>
 <!--        android:background="?attr/selectableItemBackgroundBorderless"/>-->
 </LinearLayout>
