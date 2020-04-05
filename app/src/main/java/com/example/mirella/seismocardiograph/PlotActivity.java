@@ -9,7 +9,10 @@ import android.graphics.Color;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.github.mikephil.charting.charts.LineChart;
@@ -41,18 +44,15 @@ public class PlotActivity extends AppCompatActivity {
     public static String ACC_VALUES = "NEW_ACC_VALUES";
 
     public double X,Y,Z;
-
     public ArrayList<Double> accValues = new ArrayList<>();
-
     public ArrayList<Float> accXValues = new ArrayList<>();
     public ArrayList<Float> accYValues = new ArrayList<>();
     public ArrayList<Float> accZValues = new ArrayList<>();
 
-    public ArrayList<Float> accSaveXValues = new ArrayList<>();
-    public ArrayList<Float> accSaveYValues = new ArrayList<>();
-    public ArrayList<Float> accSaveZValues = new ArrayList<>();
-
     IntentFilter accValuesIntentFilter;
+
+    static int width; //linear layout width
+    static int height; //linear layout height
 
     @BindView(R.id.accXChartID)
     LineChart accXChart;
@@ -60,6 +60,14 @@ public class PlotActivity extends AppCompatActivity {
     LineChart accYChart;
     @BindView(R.id.accZChartID)
     LineChart accZChart;
+    @BindView(R.id.checkboxXAxis)
+    CheckBox checkboxXAxis;
+    @BindView(R.id.checkboxYAxis)
+    CheckBox checkboxYAxis;
+    @BindView(R.id.checkboxZAxis)
+    CheckBox checkboxZAxis;
+    @BindView(R.id.linearLayout)
+    LinearLayout linearLayout;
 
     private BroadcastReceiver accValuesReceiver = new BroadcastReceiver() {
         @Override
@@ -74,13 +82,11 @@ public class PlotActivity extends AppCompatActivity {
                 accYValues.add((float)Y);
                 accZValues.add((float)Z);
 
-                accSaveXValues.add((float)X);
-                accSaveYValues.add((float)Y);
-                accSaveZValues.add((float)Z);
-
                 addAccValuesEntry(accXChart, accXValues, Color.BLUE);
                 addAccValuesEntry(accYChart, accYValues, Color.GREEN);
                 addAccValuesEntry(accZChart, accZValues, Color.RED);
+
+                IsCheckBoxChecked();
             }
         }
     };
@@ -131,40 +137,6 @@ public class PlotActivity extends AppCompatActivity {
         }
     }
 
-    private void Save(){
-        String timeStamp = new SimpleDateFormat(getString(R.string.dateFormat)).format(Calendar.getInstance().getTime());
-        //String csv = android.os.Environment.getExternalStorageDirectory() + "/Download"+"/dane_z_ACC";
-        //Log.d(TAG,csv);
-        try {
-            File directory = getExternalFilesDir(null); //for external storage
-            String fileName = "dane_z_ACC.csv";
-            File file = new File(directory, fileName);
-
-            // if file in directory not exists, create it
-            if (!directory.exists()) {
-                directory.createNewFile();
-            }
-
-            FileWriter fw = new FileWriter(file.getAbsoluteFile());
-            BufferedWriter bw = new BufferedWriter(fw);
-            bw.append(timeStamp);
-            bw.append("\n");
-            bw.append("Oś X:");
-            bw.append(accSaveXValues.toString());
-            bw.append("\n");
-            bw.append("Oś Y:");
-            bw.append(accSaveYValues.toString());
-            bw.append("\n");
-            bw.append("Oś Z:");
-            bw.append(accSaveZValues.toString());
-            bw.close();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-
     private void chartConfiguration(LineChart chart, String label){
         chart.setKeepPositionOnRotation(true);
         chart.getDescription().setEnabled(true);
@@ -200,6 +172,35 @@ public class PlotActivity extends AppCompatActivity {
         xAxis.setValueFormatter(xAxisFormatter);
     }
 
+    public void IsCheckBoxChecked()
+    {
+        width=linearLayout.getWidth();
+        height=linearLayout.getHeight();
+
+        if(checkboxXAxis.isChecked()){
+            accXChart.setVisibility(View.VISIBLE);
+            accXChart.setLayoutParams(new LinearLayout.LayoutParams(width,700));
+
+        }else{
+            accXChart.setVisibility(View.INVISIBLE);
+            accXChart.setLayoutParams(new LinearLayout.LayoutParams(0,0));
+        }
+        if (checkboxYAxis.isChecked()) {
+            accYChart.setVisibility(View.VISIBLE);
+            accYChart.setLayoutParams(new LinearLayout.LayoutParams(width,700));
+        }else{
+            accYChart.setVisibility(View.INVISIBLE);
+            accYChart.setLayoutParams(new LinearLayout.LayoutParams(0,0));
+        }
+        if (checkboxZAxis.isChecked()) {
+            accZChart.setVisibility(View.VISIBLE);
+            accZChart.setLayoutParams(new LinearLayout.LayoutParams(width,700));
+        }else{
+            accZChart.setVisibility(View.INVISIBLE);
+            accZChart.setLayoutParams(new LinearLayout.LayoutParams(0,0));
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -207,14 +208,18 @@ public class PlotActivity extends AppCompatActivity {
         ButterKnife.bind(this);
 
         accValuesIntentFilter = new IntentFilter("NEW_ACC_VALUES");
+        registerReceiver(accValuesReceiver, accValuesIntentFilter);
+
+        accXChart.setLayoutParams(new LinearLayout.LayoutParams(0,0));
+        accYChart.setLayoutParams(new LinearLayout.LayoutParams(0,0));
+        accZChart.setLayoutParams(new LinearLayout.LayoutParams(1050,700));
 
         //chart options
         chartConfiguration(accXChart,"Oś X");
-        chartConfiguration(accYChart,"Oś Y");
-        chartConfiguration(accZChart,"Oś Z");
-
-        registerReceiver(accValuesReceiver, accValuesIntentFilter);
+        chartConfiguration(accYChart, "Oś Y");
+        chartConfiguration(accZChart, "Oś Z");
     }
+
 
     @Override
     public void onPause () {

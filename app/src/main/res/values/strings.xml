@@ -5,5 +5,8 @@
     <string name="show_plot">Pokaż wykresy</string>
     <string name="save">Zapisz wynik badania</string>
     <string name="dateFormat">dd-MM-yyyy</string>
+    <string name="XAxis">Oś X</string>
+    <string name="YAxis">Oś Y</string>
+    <string name="ZAxis">Oś Z</string>
 
 </resources>

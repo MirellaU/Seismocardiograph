@@ -1,6 +1,7 @@
 package com.example.mirella.seismocardiograph;
 
 import android.content.BroadcastReceiver;
+import android.content.ClipData;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -14,6 +15,8 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.widget.AdapterView;
@@ -40,6 +43,7 @@ public class StartActivity extends AppCompatActivity {
     public static final String TAG = "AccSensor";
     public static String ACC_VALUES = "NEW_ACC_VALUES";
     boolean doubleTap = false;
+    boolean saveToFile = false;
 
     private Menu[] menu = {
             new Menu(R.string.test_start, R.drawable.start),
@@ -55,6 +59,8 @@ public class StartActivity extends AppCompatActivity {
 
     @BindView(R.id.menuGridView)
     GridView menuGridView;
+//    @BindView(R.id.info)
+//    ClipData.Item info;
 
     private BroadcastReceiver accValuesReceiver = new BroadcastReceiver() {
         @Override
@@ -78,6 +84,7 @@ public class StartActivity extends AppCompatActivity {
                 .setPositiveButton("OK", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         doubleTap=true;
+                        saveToFile=true;
                         startService(serviceIntent);
                         Toast.makeText(getApplicationContext(), "Badanie rozpoczęte", Toast.LENGTH_LONG).show();
                     }
@@ -131,7 +138,7 @@ public class StartActivity extends AppCompatActivity {
                     public void onClick(DialogInterface dialog, int id) {
                         if(accSaveXValues.size()!=0 && accSaveYValues.size()!=0 && accSaveZValues.size()!=0) {
                             Save();
-                            Toast.makeText(getApplicationContext(), "Zapisano pomyślnie", Toast.LENGTH_LONG).show();
+                            //Toast.makeText(getApplicationContext(), "Zapisano pomyślnie", Toast.LENGTH_LONG).show();
                             accSaveXValues.clear();
                             accSaveYValues.clear();
                             accSaveZValues.clear();
@@ -157,11 +164,12 @@ public class StartActivity extends AppCompatActivity {
         //String csv = android.os.Environment.getExternalStorageDirectory() + "/Download"+"/dane_z_ACC";
         //Log.d(TAG,csv);
         try {
-            File directory = getExternalFilesDir(null); //for external storage
-            String fileName = "dane_z_ACC.csv";
+            final File directory = getExternalFilesDir(null); //for external storage
+            final String fileName = "Seismocardiography_data.csv";
             File file = new File(directory, fileName);
 
-            Log.d(TAG,directory.toString()); ///storage/emulated/0/Android/data/com.example.mirella.seismocardiograph/files
+            Log.d(TAG,"Zapisano jako: " + fileName + " w katalogu: " + directory); ///storage/emulated/0/Android/data/com.example.mirella.seismocardiograph/files
+            //Toast.makeText(getApplicationContext(),"Zapisano",Toast.LENGTH_LONG);
             // if file in directory not exists, create it
             if (!directory.exists()) {
                 directory.createNewFile();
@@ -180,7 +188,12 @@ public class StartActivity extends AppCompatActivity {
             bw.append("Oś Z:");
             bw.append(accSaveZValues.toString());
             bw.close();
-
+            runOnUiThread(new Runnable(){
+                public void run() {
+                    //Log.d(TAG,"Zapisano jako: " + fileName + " w katalogu: " + directory); ///storage/emulated/0/Android/data/com.example.mirella.seismocardiograph/files
+                    Toast.makeText(getApplicationContext(),"Zapisano jako: " + fileName + " w katalogu: " + directory,Toast.LENGTH_LONG);
+                }
+            });
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -208,8 +221,7 @@ public class StartActivity extends AppCompatActivity {
                     StopTest();
                 }
                 else if (position==2){
-                    if(!doubleTap)
-                    {
+                    if(!saveToFile) {
                         Toast.makeText(getApplicationContext(),"Nie rozpoczęto badania!",Toast.LENGTH_LONG);
                     } else {
                         SaveDataToCSV();
@@ -221,5 +233,33 @@ public class StartActivity extends AppCompatActivity {
 
             }
         });
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(android.view.Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.up_menu,menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()){
+            case R.id.info:
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setTitle("Jak rozpocząć badanie?")
+                        .setMessage("W celu poprawnego wykonania badania należy przyłożyć telefon na środku klatki piersiowej")
+                        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                dialog.dismiss();
+                            }
+                        });
+                //.setView();
+                // Create the AlertDialog object
+                AlertDialog dialog = builder.create();
+                dialog.getWindow().getAttributes().windowAnimations = R.style.DialogAnimation;
+                dialog.show();
+        }
+        return super.onOptionsItemSelected(item);
     }
 }
