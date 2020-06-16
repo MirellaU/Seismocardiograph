@@ -57,28 +57,17 @@ public class AccService extends JobIntentService implements SensorEventListener 
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-
         lastX = event.values[0];// - gravityX;
         lastY = event.values[1]; //- gravityY;
         lastZ = event.values[2];// - gravityZ;
 
-//        lastX = event.values[0];
-//        lastY = event.values[1];
-//        lastZ = event.values[2];
-
-        //roll = Math.toDegrees(Math.atan2(lastX,lastZ));
-        //pitch = Math.toDegrees(Math.atan2(lastY,lastX));
 
         accValues.add(lastX);
         accValues.add(lastY);
         accValues.add(lastZ);
 
-//        accValues.add(deltaZ);
-//        Log.d(TAG, accValues.toString());
-//        if (accValues.size()!=0) {
-            Send();
-//        } else{}
-         accValues.clear();
+        Send();
+        accValues.clear();
     }
 
     protected void Send() {
