@@ -13,6 +13,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.github.mikephil.charting.charts.LineChart;
@@ -54,12 +55,25 @@ public class PlotActivity extends AppCompatActivity {
     static int width; //linear layout width
     static int height; //linear layout height
 
+    //HR detection variables
+    public ArrayList<Float> HRValues = new ArrayList<>();
+    HRDetectionActivity HR = new HRDetectionActivity();
+    float f1=5;
+    float f2=25;
+    int f_samp = 100;
+    int N=4;
+    int windowLength = 10;
+
     @BindView(R.id.accXChartID)
     LineChart accXChart;
     @BindView(R.id.accYChartID)
     LineChart accYChart;
     @BindView(R.id.accZChartID)
     LineChart accZChart;
+    @BindView(R.id.HRChartID)
+    LineChart HRChart;
+    @BindView(R.id.HRValue)
+    TextView HRValue;
     @BindView(R.id.checkboxXAxis)
     CheckBox checkboxXAxis;
     @BindView(R.id.checkboxYAxis)
@@ -81,17 +95,38 @@ public class PlotActivity extends AppCompatActivity {
                 accXValues.add((float)X);
                 accYValues.add((float)Y);
                 accZValues.add((float)Z);
+                HRValues.add((float)Z);
 
                 addAccValuesEntry(accXChart, accXValues, Color.BLUE);
                 addAccValuesEntry(accYChart, accYValues, Color.GREEN);
                 addAccValuesEntry(accZChart, accZValues, Color.RED);
+                //addAccValuesEntry(HRChart, HRValues, Color.RED);
 
                 IsCheckBoxChecked();
+
+               FindPeaks();
             }
         }
     };
 
-    private void addAccValuesEntry(LineChart lineChart, ArrayList val, int color) {
+    private void FindPeaks(){
+        new Thread(new Runnable() {
+            public void run() {
+                // a potentially time consuming task
+                //opóźnienie 1s
+                if(HRValues.size()>100) {
+                    HR.BandPassFilter(f1, f2, f_samp, N,HRValues);
+                    HR.SignalSquare(HRValues);
+                    HR.Smoothing(windowLength, HRValues);
+                    HR.PeakDetection(HRValues);
+                    addAccValuesEntry(HRChart, HRValues, Color.RED);
+                    HRValue.setText(HR.HRValue);
+                }
+            }
+        }).start();
+    }
+
+    public void addAccValuesEntry(LineChart lineChart, ArrayList val, int color) {
         LineData data = lineChart.getData();
 
         if (data == null) {
@@ -213,11 +248,13 @@ public class PlotActivity extends AppCompatActivity {
         accXChart.setLayoutParams(new LinearLayout.LayoutParams(0,0));
         accYChart.setLayoutParams(new LinearLayout.LayoutParams(0,0));
         accZChart.setLayoutParams(new LinearLayout.LayoutParams(1050,700));
+        HRChart.setLayoutParams(new LinearLayout.LayoutParams(1050,700));
 
         //chart options
         chartConfiguration(accXChart,"Oś X");
         chartConfiguration(accYChart, "Oś Y");
         chartConfiguration(accZChart, "Oś Z");
+        chartConfiguration(HRChart, "Tętno");
     }
 
 
