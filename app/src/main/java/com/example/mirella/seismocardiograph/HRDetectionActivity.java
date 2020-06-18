@@ -1,10 +1,13 @@
 package com.example.mirella.seismocardiograph;
 
+import android.util.Log;
+
 import java.util.ArrayList;
 
 public class HRDetectionActivity {
 
     public int HRValue;
+    public static String TAG = "HRClass";
 //    f1 - najmniejsza częstotliwość
 //    f2 - najwyższa częstotliwość
 //    f_samp - częstotliwość próbkowania
@@ -24,17 +27,24 @@ public class HRDetectionActivity {
             }
             int stop=0;
         }
-
+        Log.d(TAG, "HR przed: " + HRValues);
         for(int i =0; i<HRValues.size(); i++){
-            HRValues.set(i,HRValues.get(i)*filter.get(i));
+            if(filter.size()<=i){
+                //HRValues.set(i, HRValues.get(i));
+                break;
+            } else {
+                HRValues.set(i, HRValues.get(i) * filter.get(i));
+            }
         }
+        Log.d(TAG, "HR po fil: " + HRValues);
     }
 
     //Potęgowanie sygnału
     public void SignalSquare(ArrayList<Float> HRValues){
         for (int i=0; i<HRValues.size(); i++) {
-            HRValues.set(i,(float) Math.exp(HRValues.get(i)));
+            HRValues.set(i,(float) (HRValues.get(i)*HRValues.get(i)));
         }
+        Log.d(TAG, "HR po exp: " + HRValues);
     }
 
     //Filtr ruchomej średniej
@@ -46,7 +56,7 @@ public class HRDetectionActivity {
     }
 
     //Algorytm detekcji HR
-    public void PeakDetection(ArrayList<Float> HRValues){
+    public int PeakDetection(ArrayList<Float> HRValues){
         double max=0;
         double min=0;
         double lastMax=0;
@@ -83,6 +93,7 @@ public class HRDetectionActivity {
             }
             threshold = noise+0.5*(signal-noise);
         }
+        return HRValue;
     }
 
 }

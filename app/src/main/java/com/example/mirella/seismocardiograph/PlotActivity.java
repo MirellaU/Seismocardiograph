@@ -9,6 +9,7 @@ import android.graphics.Color;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -39,6 +40,8 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
+import static android.webkit.ConsoleMessage.MessageLevel.LOG;
+
 public class PlotActivity extends AppCompatActivity {
 
     public static final String TAG = "PlotActivity";
@@ -57,12 +60,14 @@ public class PlotActivity extends AppCompatActivity {
 
     //HR detection variables
     public ArrayList<Float> HRValues = new ArrayList<>();
+    public ArrayList<Float> HRPlotValues = new ArrayList<>();
     HRDetectionActivity HR = new HRDetectionActivity();
     float f1=5;
     float f2=25;
     int f_samp = 100;
-    int N=4;
+    int N=0;
     int windowLength = 10;
+    int HRVal=0;
 
     @BindView(R.id.accXChartID)
     LineChart accXChart;
@@ -101,29 +106,27 @@ public class PlotActivity extends AppCompatActivity {
                 addAccValuesEntry(accYChart, accYValues, Color.GREEN);
                 addAccValuesEntry(accZChart, accZValues, Color.RED);
                 //addAccValuesEntry(HRChart, HRValues, Color.RED);
-
                 IsCheckBoxChecked();
-
-               FindPeaks();
+                if(HRValues.size()>99) {
+                    FindPeaks();
+                }
             }
         }
     };
 
     private void FindPeaks(){
-        new Thread(new Runnable() {
-            public void run() {
-                // a potentially time consuming task
-                //opóźnienie 1s
-                if(HRValues.size()>100) {
-                    HR.BandPassFilter(f1, f2, f_samp, N,HRValues);
-                    HR.SignalSquare(HRValues);
-                    HR.Smoothing(windowLength, HRValues);
-                    HR.PeakDetection(HRValues);
-                    addAccValuesEntry(HRChart, HRValues, Color.RED);
-                    HRValue.setText(HR.HRValue);
-                }
-            }
-        }).start();
+        Log.d(TAG, "HR w PlotActivity: " + HRValues);
+        N= HRValues.size()-1;
+        HR.BandPassFilter(f1, f2, f_samp, N, HRValues);
+        HR.SignalSquare(HRValues);
+        HR.Smoothing(windowLength, HRValues);
+        HRVal = HR.PeakDetection(HRValues);
+        for(int i=0; i< HRValues.size();i++){
+            HRPlotValues.add(HRValues.get(i));
+        }
+        addHRValuesEntry(HRChart, HRPlotValues, Color.RED);
+        HRValues.clear();
+        HRValue.setText(String.valueOf(HRVal));
     }
 
     public void addAccValuesEntry(LineChart lineChart, ArrayList val, int color) {
@@ -163,6 +166,43 @@ public class PlotActivity extends AppCompatActivity {
         }
     }
 
+    public void addHRValuesEntry(LineChart lineChart, ArrayList val, int color) {
+        LineData data = lineChart.getData();
+
+        if (data == null) {
+            data = new LineData();
+            lineChart.setData(new LineData());
+        }
+
+        ArrayList<Entry> values = new ArrayList<>();
+
+        for(int i=0 ; i<val.size();i++) {
+            values.add(new Entry(i, (float)val.get(i)));
+        }
+        removeDataSet(lineChart);
+
+        LineDataSet lds = new LineDataSet(values, "");
+
+        lds.setLineWidth(2.5f);
+        lds.setDrawCircles(false);
+        lds.setColor(color);
+        lds.setHighLightColor(color);
+        lds.setValueTextSize(0f);
+
+        data.addDataSet(lds);
+        data.notifyDataChanged();
+
+        lineChart.notifyDataSetChanged();
+        lineChart.invalidate();
+
+        lineChart.setVisibleXRangeMaximum(500);
+        lineChart.moveViewToX(val.size());
+
+        if(val.size()>500) {
+            val.remove(val.size()-499);
+        }
+    }
+
     private void removeDataSet(LineChart chart) {
         LineData data = chart.getData();
         if (data != null) {
@@ -173,6 +213,41 @@ public class PlotActivity extends AppCompatActivity {
     }
 
     private void chartConfiguration(LineChart chart, String label){
+        chart.setKeepPositionOnRotation(true);
+        chart.getDescription().setEnabled(true);
+        chart.getDescription().setText(label);
+        chart.getDescription().setTextSize(20);
+        chart.getAxisRight().setDrawLabels(false);
+        chart.getLegend().setEnabled(false);
+        chart.fitScreen();
+
+        final LineData data = new LineData();
+        chart.setData(data);
+
+        //accChart.fitScreen();
+        YAxis leftAxis = chart.getAxisLeft();
+        leftAxis.setDrawGridLines(false); // no grid lines
+        leftAxis.setAxisMinimum(-1f); // start at -1
+        leftAxis.setAxisMaximum(1f); // the axis maximum is 1
+
+        XAxis xAxis = chart.getXAxis();
+        xAxis.setDrawGridLines(false); //no grid lines
+        chart.getXAxis().setDrawLabels(true);
+        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+        xAxis.setGranularity(1f);
+
+        IAxisValueFormatter xAxisFormatter = new IAxisValueFormatter() {
+            // @Override
+            public String getFormattedValue(float value, AxisBase axis) {
+                SimpleDateFormat sdf = new SimpleDateFormat("hh:mm:ss", Locale.GERMAN);
+                String time = sdf.format(new Date());
+                return time;
+            }
+        };
+        xAxis.setValueFormatter(xAxisFormatter);
+    }
+
+    private void HRchartConfiguration(LineChart chart, String label){
         chart.setKeepPositionOnRotation(true);
         chart.getDescription().setEnabled(true);
         chart.getDescription().setText(label);
@@ -254,7 +329,7 @@ public class PlotActivity extends AppCompatActivity {
         chartConfiguration(accXChart,"Oś X");
         chartConfiguration(accYChart, "Oś Y");
         chartConfiguration(accZChart, "Oś Z");
-        chartConfiguration(HRChart, "Tętno");
+        HRchartConfiguration(HRChart, "Tętno");
     }
 
 
