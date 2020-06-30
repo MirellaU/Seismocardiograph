@@ -44,6 +44,7 @@ public class StartActivity extends AppCompatActivity {
     public static String ACC_VALUES = "NEW_ACC_VALUES";
     boolean doubleTap = false;
     boolean saveToFile = false;
+    int i = 1;
 
     private Menu[] menu = {
             new Menu(R.string.test_start, R.drawable.start),
@@ -165,7 +166,7 @@ public class StartActivity extends AppCompatActivity {
         //Log.d(TAG,csv);
         try {
             final File directory = getExternalFilesDir(null); //for external storage
-            final String fileName = "Seismocardiography_data.csv";
+            final String fileName = "Seismocardiography_data" + i + ".csv";
             File file = new File(directory, fileName);
 
             Log.d(TAG,"Zapisano jako: " + fileName + " w katalogu: " + directory); ///storage/emulated/0/Android/data/com.example.mirella.seismocardiograph/files
@@ -188,6 +189,7 @@ public class StartActivity extends AppCompatActivity {
             bw.append("Oś Z:");
             bw.append(accSaveZValues.toString());
             bw.close();
+            i++;
             runOnUiThread(new Runnable(){
                 public void run() {
                     //Log.d(TAG,"Zapisano jako: " + fileName + " w katalogu: " + directory); ///storage/emulated/0/Android/data/com.example.mirella.seismocardiograph/files

@@ -62,8 +62,8 @@ public class PlotActivity extends AppCompatActivity {
     public ArrayList<Float> HRValues = new ArrayList<>();
     public ArrayList<Float> HRPlotValues = new ArrayList<>();
     HRDetectionActivity HR = new HRDetectionActivity();
-    float f1=5;
-    float f2=25;
+    float f1=15;
+    float f2=20;
     int f_samp = 100;
     int N=0;
     int windowLength = 10;
@@ -115,18 +115,23 @@ public class PlotActivity extends AppCompatActivity {
     };
 
     private void FindPeaks(){
-        Log.d(TAG, "HR w PlotActivity: " + HRValues);
-        N= HRValues.size()-1;
-        HR.BandPassFilter(f1, f2, f_samp, N, HRValues);
+        //N= HRValues.size()-1;
+        N=6;
+        //HR.BandPassFilter(f1, f2, f_samp, N, HRValues);
+        BandpassFilterButterworthImplementation BPF = new BandpassFilterButterworthImplementation(f1,f2,N,f_samp);
+        for(int i =0;i<HRValues.size();i++){
+            BPF.compute(HRValues.get(i));
+        }
         HR.SignalSquare(HRValues);
         HR.Smoothing(windowLength, HRValues);
-        HRVal = HR.PeakDetection(HRValues);
         for(int i=0; i< HRValues.size();i++){
             HRPlotValues.add(HRValues.get(i));
         }
+        HRVal = HR.PeakDetection(HRValues);
+        Log.d(TAG, "HR w PlotActivity: " + HRPlotValues);
         addHRValuesEntry(HRChart, HRPlotValues, Color.RED);
         HRValues.clear();
-        HRValue.setText(String.valueOf(HRVal));
+        HRValue.setText("TĘTNO: " + String.valueOf(HRVal));
     }
 
     public void addAccValuesEntry(LineChart lineChart, ArrayList val, int color) {
@@ -195,11 +200,11 @@ public class PlotActivity extends AppCompatActivity {
         lineChart.notifyDataSetChanged();
         lineChart.invalidate();
 
-        lineChart.setVisibleXRangeMaximum(500);
+        lineChart.setVisibleXRangeMaximum(200);
         lineChart.moveViewToX(val.size());
 
-        if(val.size()>500) {
-            val.remove(val.size()-499);
+        if(val.size()>200) {
+            val.remove(val.size()-199);
         }
     }
 
@@ -262,8 +267,8 @@ public class PlotActivity extends AppCompatActivity {
         //accChart.fitScreen();
         YAxis leftAxis = chart.getAxisLeft();
         leftAxis.setDrawGridLines(false); // no grid lines
-        leftAxis.setAxisMinimum(-1f); // start at -1
-        leftAxis.setAxisMaximum(1f); // the axis maximum is 1
+        leftAxis.setAxisMinimum(0f); // start at -1
+        leftAxis.setAxisMaximum(0.2f); // the axis maximum is 1
 
         XAxis xAxis = chart.getXAxis();
         xAxis.setDrawGridLines(false); //no grid lines

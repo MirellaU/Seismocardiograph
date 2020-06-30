@@ -3,77 +3,55 @@ package com.example.mirella.seismocardiograph;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class HRDetectionActivity {
 
     public int HRValue;
     public static String TAG = "HRClass";
-//    f1 - najmniejsza częstotliwość
-//    f2 - najwyższa częstotliwość
-//    f_samp - częstotliwość próbkowania
-//    N - rząd filtru
-    public void BandPassFilter(float f1, float f2, int f_samp, int N,  ArrayList<Float> HRValues) {
-        ArrayList<Float> filter = new ArrayList<>();
-        float f1c = f1/f_samp;
-        float f2c = f2/f_samp;
-        float omega1 = (float) (2*Math.PI*f1c);
-        float omega2 = (float) (2*Math.PI*f2c);
-        int middle = N/2;
-        for(int i = (-N/2);i<(N/2); i++) {
-            if(i==0){
-                filter.add(middle,2*(f2c - f1c));
-            } else {
-                filter.add(middle+i, (float) ((Math.sin(omega2*i)/(Math.PI*i))-(Math.sin(omega1*i)/(Math.PI*i))));
-            }
-            int stop=0;
-        }
-        Log.d(TAG, "HR przed: " + HRValues);
-        for(int i =0; i<HRValues.size(); i++){
-            if(filter.size()<=i){
-                //HRValues.set(i, HRValues.get(i));
-                break;
-            } else {
-                HRValues.set(i, HRValues.get(i) * filter.get(i));
-            }
-        }
-        Log.d(TAG, "HR po fil: " + HRValues);
-    }
 
     //Potęgowanie sygnału
     public void SignalSquare(ArrayList<Float> HRValues){
         for (int i=0; i<HRValues.size(); i++) {
             HRValues.set(i,(float) (HRValues.get(i)*HRValues.get(i)));
         }
-        Log.d(TAG, "HR po exp: " + HRValues);
+        //Log.d(TAG, "HR po exp: " + HRValues);
     }
 
     //Filtr ruchomej średniej
     public void Smoothing(int windowLength, ArrayList<Float> HRValues){
         //windowLength =10?
-        for(int i=0; i<HRValues.size()-windowLength+1; i++){
-            HRValues.set(i, (1/windowLength * HRValues.get(i)));
+        float sum =0;
+        float temp = 0;
+        for(int i=0; i<HRValues.size(); i++){
+            sum= sum + HRValues.get(i);
+            if(i>windowLength-1) {
+                temp = HRValues.get(i-windowLength);
+                HRValues.set(i - windowLength, sum / windowLength);
+            }
+            if(i>HRValues.size()-windowLength){
+                temp = HRValues.get(i-windowLength);
+                HRValues.set(i, sum / windowLength);
+            }
+            sum = sum - temp;
         }
+        //Log.d(TAG, "HR po wyg: " + HRValues);
     }
 
     //Algorytm detekcji HR
     public int PeakDetection(ArrayList<Float> HRValues){
-        double max=0;
-        double min=0;
-        double lastMax=0;
-        double lastMin=0;
-        for(int i =1; i<HRValues.size();i++){
-            if(HRValues.get(i)>lastMax) {
-                max = HRValues.get(i);
-            }
-            if(HRValues.get(i)<lastMin) {
-                min = HRValues.get(i);
-            }
-            lastMax= HRValues.get(i-1);
-            lastMin = HRValues.get(i-1);
+        double avr=0;
+        for(int i =0; i<HRValues.size();i++){
+           avr=avr+HRValues.get(i);
         }
-        double signal = max;
-        double noise = min;
-        double threshold = signal - 0.3 * signal;
+        avr=avr/HRValues.size();
+        Log.d(TAG, "Signal " + String.valueOf(avr));
+        double signal = 1.2*avr;
+        double noise = avr;
+        //Log.d(TAG, "Signal " + String.valueOf(signal));
+        //Log.d(TAG, "Noise "  + String.valueOf(noise));
+        double threshold=noise+0.25*(signal-noise);
+        Log.d(TAG, "Threshold "  + String.valueOf(threshold));
         int peakPlace;
         int lastPeakPlace=0;
         double temp1;
@@ -82,16 +60,21 @@ public class HRDetectionActivity {
             if(threshold<HRValues.get(i)){
                 peakPlace =i;
                 temp1 = HRValues.get(i);
-                if(peakPlace>lastPeakPlace+30){
+                Log.d(TAG, "Temp1 "  + String.valueOf(temp1));
+                if(peakPlace>lastPeakPlace+20){
                     HRValue+=1;
-                    signal = 0.125*temp1+0.875*signal;
+                    signal = 0.2*temp1+0.8*signal;
+                Log.d(TAG, "Signal2 "  + String.valueOf(signal));
                 }
                 lastPeakPlace=peakPlace;
             } else {
                 temp2=HRValues.get(i);
-                noise=0.125*temp2 + 0.875*noise;
+                //Log.d(TAG, "Temp2 "  + String.valueOf(temp2));
+                noise=0.2*temp2 + 0.8*noise;
+                //Log.d(TAG, "Noise2 "  + String.valueOf(noise));
             }
-            threshold = noise+0.5*(signal-noise);
+            threshold = threshold=noise+0.8*(signal-noise);
+            //Log.d(TAG, "Threshold2 "  + String.valueOf(threshold));
         }
         return HRValue;
     }

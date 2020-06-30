@@ -19,9 +19,7 @@ public class AccService extends JobIntentService implements SensorEventListener 
     private SensorManager mSensorManager;
     private Sensor mAccelerometer;
 
-    private double lastX, lastY, lastZ, gravityX,gravityY,gravityZ;
-
-    final double alpha = 0.8;
+    private double lastX, lastY, lastZ;
 
     public ArrayList<Double> accValues = new ArrayList<>();
 
@@ -57,16 +55,16 @@ public class AccService extends JobIntentService implements SensorEventListener 
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        lastX = event.values[0];// - gravityX;
-        lastY = event.values[1]; //- gravityY;
-        lastZ = event.values[2];// - gravityZ;
+        lastX = event.values[0];
+        lastY = event.values[1];
+        lastZ = event.values[2];
 
-
-        accValues.add(lastX);
-        accValues.add(lastY);
-        accValues.add(lastZ);
-
-        Send();
+        if(lastZ<0.5 && lastZ>0){
+            accValues.add(lastX);
+            accValues.add(lastY);
+            accValues.add(lastZ);
+            Send();
+        }
         accValues.clear();
     }
 
