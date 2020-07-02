@@ -68,6 +68,11 @@ public class PlotActivity extends AppCompatActivity {
     int N=0;
     int windowLength = 10;
     int HRVal=0;
+    int lastHRVal=0;
+    int sum=0;
+    int i=1;
+    public ArrayList<Double> displayedHR = new ArrayList<>();
+    String textViewText;
 
     @BindView(R.id.accXChartID)
     LineChart accXChart;
@@ -128,10 +133,21 @@ public class PlotActivity extends AppCompatActivity {
             HRPlotValues.add(HRValues.get(i));
         }
         HRVal = HR.PeakDetection(HRValues);
-        Log.d(TAG, "HR w PlotActivity: " + HRPlotValues);
+        Log.d(TAG, "HR w PlotActivity: " + HRVal);
         addHRValuesEntry(HRChart, HRPlotValues, Color.RED);
         HRValues.clear();
-        HRValue.setText("TĘTNO: " + String.valueOf(HRVal));
+        if(HRVal>0) {
+            sum=sum+HRVal;
+            float val = sum*100/i;
+            displayedHR.add(i-1, (double) (val/100*60));
+            textViewText = "TĘTNO " + String.format("%1$.0f", displayedHR.get(displayedHR.size()-1));
+            HRValue.setText(textViewText);
+            i++;
+            if(displayedHR.size()>100){
+                displayedHR.remove(displayedHR.size()-99);
+            }
+        }
+
     }
 
     public void addAccValuesEntry(LineChart lineChart, ArrayList val, int color) {

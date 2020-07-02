@@ -7,7 +7,6 @@ import java.util.Arrays;
 
 public class HRDetectionActivity {
 
-    public int HRValue;
     public static String TAG = "HRClass";
 
     //Potęgowanie sygnału
@@ -41,6 +40,7 @@ public class HRDetectionActivity {
     //Algorytm detekcji HR
     public int PeakDetection(ArrayList<Float> HRValues){
         double avr=0;
+        int HRValue=0;
         for(int i =0; i<HRValues.size();i++){
            avr=avr+HRValues.get(i);
         }
