@@ -1,6 +1,6 @@
 package com.example.mirella.seismocardiograph;
 
-public class Menu {
+class Menu {
     private final int text;
     private final int imageResource;
 

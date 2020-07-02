@@ -8,5 +8,27 @@
     <string name="XAxis">Oś X</string>
     <string name="YAxis">Oś Y</string>
     <string name="ZAxis">Oś Z</string>
+    <string name="contentDescription">MENU</string>
+    <string name="HR">TĘTNO</string>
+    <string name="info">info</string>
+    <string name="OK">OK</string>
+    <string name="Error">Error</string>
+
+    <string name="NoAcc">Nie wykryto akcelerometru. Nie można przeprowadzić badania.</string>
+
+    <string name="ExaminationInfo">Informacja o badaniu</string>
+    <string name="ExaminationInfoText">"W celu poprawnego wykonania badania należy położyć się wygodnie na plecach i przyłożyć telefon na środku klatki piersiowej. Nie powinno wykonywać się gwałtownych ruchów. Oddychać normalnie."</string>
+    <string name="ExaminationNotStartInfo">Nie rozpoczęto badania!</string>
+    <string name="ExaminationStart">Badanie rozpoczęte</string>
+    <string name="ExaminationNotIntentToStart">Nie chcę rozpoczynać badania</string>
+
+    <string name="ExaminationStopInfo">Przerwanie badania</string>
+    <string name="ExaminationIntentToStop">Czy na pewno chcesz przerwać badanie?</string>
+    <string name="ExaminationStop">Badanie przerwane</string>
+    <string name="ExaminationNotStop">Nie chcę przerywać badania</string>
+
+    <string name="Save">Czy chcesz zapisać plik?</string>
+    <string name="DontSave">Nie zapisuj</string>
+    <string name="DoSave">Zapisz</string>
 
 </resources>

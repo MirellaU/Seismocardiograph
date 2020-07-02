@@ -1,16 +1,14 @@
 package com.example.mirella.seismocardiograph;
 
 import android.content.Context;
-import android.media.Image;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-public class MenuAdapter extends BaseAdapter {
+class MenuAdapter extends BaseAdapter {
 
     private final Context mContext;
     private final Menu[] menu;
@@ -49,8 +47,8 @@ public class MenuAdapter extends BaseAdapter {
             convertView = layoutInflater.inflate(R.layout.menu, null);
         }
 
-        final ImageView imageView = (ImageView)convertView.findViewById(R.id.image);
-        final TextView textView = (TextView)convertView.findViewById(R.id.text);
+        final ImageView imageView = convertView.findViewById(R.id.image);
+        final TextView textView = convertView.findViewById(R.id.text);
 
         imageView.setImageResource(menuItem.getImageResource());
         textView.setText(mContext.getString(menuItem.getText()));

@@ -2,12 +2,12 @@ package com.example.mirella.seismocardiograph;
 
 public class LowpassFilterButterworthSection
 {
-    protected FIRFilterImplementation firFilter = new FIRFilterImplementation(3);
-    protected IIRFilterImplementation iirFilter = new IIRFilterImplementation(2);
+    private final FIRFilterImplementation firFilter = new FIRFilterImplementation(3);
+    private final IIRFilterImplementation iirFilter = new IIRFilterImplementation(2);
 
-    protected double[] a = new double[3];
-    protected double[] b = new double[2];
-    protected double gain;
+    private final double[] a = new double[3];
+    private final double[] b = new double[2];
+    private final double gain;
 
     public LowpassFilterButterworthSection
             (double cutoffFrequencyHz, double k, double n, double Fs)

@@ -1,9 +1,9 @@
 package com.example.mirella.seismocardiograph;
 
-public class BandpassFilterButterworthImplementation
+class BandpassFilterButterworthImplementation
 {
-    protected LowpassFilterButterworthImplementation lowpassFilter;
-    protected HighpassFilterButterworthImplementation highpassFilter;
+    private final LowpassFilterButterworthImplementation lowpassFilter;
+    private final HighpassFilterButterworthImplementation highpassFilter;
 
     public BandpassFilterButterworthImplementation
             (double bottomFrequencyHz, double topFrequencyHz, int numSections, double Fs)
@@ -14,9 +14,9 @@ public class BandpassFilterButterworthImplementation
                 (bottomFrequencyHz, numSections, Fs);
     }
 
-    public double compute(double input)
+    public void compute(double input)
     {
         // compute the result as the cascade of the highpass and lowpass filters
-        return this.highpassFilter.compute(this.lowpassFilter.compute(input));
+        this.highpassFilter.compute(this.lowpassFilter.compute(input));
     }
 }

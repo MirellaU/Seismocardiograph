@@ -2,7 +2,7 @@ package com.example.mirella.seismocardiograph;
 
 public class LowpassFilterButterworthImplementation
 {
-    protected LowpassFilterButterworthSection[] section;
+    private final LowpassFilterButterworthSection[] section;
 
     public LowpassFilterButterworthImplementation
             (double cutoffFrequencyHz, int numSections, double Fs)
@@ -17,9 +17,8 @@ public class LowpassFilterButterworthImplementation
     public double compute(double input)
     {
         double output = input;
-        for (int i = 0; i < this.section.length; i++)
-        {
-            output = this.section[i].compute(output);
+        for (LowpassFilterButterworthSection lowpassFilterButterworthSection : this.section) {
+            output = lowpassFilterButterworthSection.compute(output);
         }
         return output;
     }

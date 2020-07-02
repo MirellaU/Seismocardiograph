@@ -14,14 +14,12 @@ import java.util.ArrayList;
 
 public class AccService extends JobIntentService implements SensorEventListener {
 
-    public static final String TAG = "ServiceActivity";
+    private static final String TAG = "ServiceActivity";
 
     private SensorManager mSensorManager;
     private Sensor mAccelerometer;
 
-    private double lastX, lastY, lastZ;
-
-    public ArrayList<Double> accValues = new ArrayList<>();
+    private final ArrayList<Double> accValues = new ArrayList<>();
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -30,36 +28,33 @@ public class AccService extends JobIntentService implements SensorEventListener 
 
     @Override
     public void onCreate() {
-//        super.onCreate();
         try {
             mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
             mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
         } catch (Exception e) {
             new AlertDialog.Builder(this)
-                    .setTitle("Error")
-                    .setMessage("Nie wykryto akcelerometru. Nie można przeprowadzić badania.")
+                    .setTitle(R.string.Error)
+                    .setMessage(R.string.NoAcc)
                     .setPositiveButton(android.R.string.ok, null)
                     .setIcon(android.R.drawable.ic_dialog_alert)
                     .show();
         }
         mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
-        Log.d(TAG,"Service started");
-
     }
 
     @Override
     protected void onHandleWork(@NonNull Intent intent) { }
 
     @Override
-    public void onAccuracyChanged(Sensor sensor, int i) { return; }
+    public void onAccuracyChanged(Sensor sensor, int i) { }
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        lastX = event.values[0];
-        lastY = event.values[1];
-        lastZ = event.values[2];
+        double lastX = event.values[0];
+        double lastY = event.values[1];
+        double lastZ = event.values[2];
 
-        if(lastZ<0.5 && lastZ>0){
+        if(lastZ <0.5 && lastZ >0){
             accValues.add(lastX);
             accValues.add(lastY);
             accValues.add(lastZ);
@@ -68,10 +63,9 @@ public class AccService extends JobIntentService implements SensorEventListener 
         accValues.clear();
     }
 
-    protected void Send() {
+    private void Send() {
         Intent accValuesIntent = new Intent("NEW_ACC_VALUES");
         accValuesIntent.putExtra("ACC_VALUES", accValues);
-        //Log.d(TAG, String.valueOf(accValues));
         sendBroadcast(accValuesIntent);
     }
 

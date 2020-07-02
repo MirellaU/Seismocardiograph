@@ -2,7 +2,7 @@ package com.example.mirella.seismocardiograph;
 
 public class FIRFilterImplementation
 {
-    protected double[] z;
+    private final double[] z;
     public FIRFilterImplementation(int order)
     {
         this.z = new double[order];
