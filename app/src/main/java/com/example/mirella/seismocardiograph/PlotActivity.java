@@ -29,102 +29,177 @@ import java.util.Locale;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-@SuppressWarnings("unchecked")
+/**
+ * Aktywność obsługująca ikonę "Pokaż wykresy" z menu aplikacji.
+ * Zarządza sposobem wyświetlania wykresów i danymi na wykresie, odbiera dane z serwisu AccService,
+ * zawiera zmienne do filtracji i analizy sygnału. Wyświetla tętno w aktywności.
+ *
+ * @author Mirella
+ * @version 1.0
+ */
 public class PlotActivity extends AppCompatActivity {
 
+    /**
+     * TAG używany do odczytu logów z tej Aktywności.
+     */
     private static final String TAG = "PlotActivity";
+
+    /**
+     * Etykieta danych napływających z AccService.
+     */
     private static final String ACC_VALUES = "NEW_ACC_VALUES";
 
-    private double X;
-    private double Y;
-    private double Z;
-    private ArrayList<Double> accValues = new ArrayList<>();
+    /**
+     * Wysokość i szerokość siatki układu.
+     */
+    private static int width; //linear layout width
+    private static int height; //linear layout height
+
+    /**
+     * Tablice przechowujące wartości z osi X,Y,Z akcelerometru.
+     */
     private final ArrayList<Float> accXValues = new ArrayList<>();
     private final ArrayList<Float> accYValues = new ArrayList<>();
     private final ArrayList<Float> accZValues = new ArrayList<>();
 
-    private IntentFilter accValuesIntentFilter;
-
-    private static int width; //linear layout width
-    private static int height; //linear layout height
-
     //HR detection variables
+    /**
+     * Tablica przechwująca wartości osi Z, używana do analizy sygnału.
+     */
     private final ArrayList<Float> HRValues = new ArrayList<>();
-    private final ArrayList<Float> HRPlotValues = new ArrayList<>();
-    private final ArrayList<Double> displayedHR = new ArrayList<>();
-    private final HRDetectionActivity HR = new HRDetectionActivity();
-    private final float f1 = 15;
-    private final float f2 = 20;
-    private final int f_samp = 100;
-    private int N = 0;
-    private final int windowLength = 10;
-    private int HRVal = 0;
-    private int sum = 0;
-    private int i = 1;
-    private int index=0;
-    private String textViewText;
 
+    /**
+     * Tablica przechwująca wartości po analizie sygnału, używana do wyświetlania sygnału na wykresie.
+     */
+    private final ArrayList<Float> HRPlotValues = new ArrayList<>();
+
+    /**
+     * Tablica przechwująca wartości po analizie sygnału, używana do obliczenia i wyświetlenia
+     * użytkownikowi wartości tętna.
+     */
+    private final ArrayList<Double> displayedHR = new ArrayList<>();
+
+    /**
+     * Instancja klasy HRDetectionActivity.
+     */
+    private final HRDetectionActivity HR = new HRDetectionActivity();
+
+    /**
+     * Suma kolejnych wartości wykrytych pików.
+     */
+    private int sum = 0;
+    /**
+     * Ilość kolejnych detekcji pików.
+     */
+    private int i = 1;
+    /**
+     * Indeks tablicy displayedHR.
+     */
+    private int index=0;
+
+    /**
+     * Wykres wartości X.
+     */
     @BindView(R.id.accXChartID)
     LineChart accXChart;
+    /**
+     * Wykres wartości Y.
+     */
     @BindView(R.id.accYChartID)
     LineChart accYChart;
+    /**
+     * Wykres wartości Z.
+     */
     @BindView(R.id.accZChartID)
     LineChart accZChart;
+    /**
+     * Wykres wartości HR.
+     */
     @BindView(R.id.HRChartID)
     LineChart HRChart;
+    /**
+     * Wartość HR wyświetlana uzytkownikowi.
+     */
     @BindView(R.id.HRValue)
     TextView HRValue;
+    /**
+     * Checkbox wykresu osi X.
+     */
     @BindView(R.id.checkboxXAxis)
     CheckBox checkboxXAxis;
+    /**
+     * Checkbox wykresu osi Y.
+     */
     @BindView(R.id.checkboxYAxis)
     CheckBox checkboxYAxis;
+    /**
+     * Checkbox wykresu osi Z.
+     */
     @BindView(R.id.checkboxZAxis)
     CheckBox checkboxZAxis;
+    /**
+     * Linear layout.
+     */
     @BindView(R.id.linearLayout)
     LinearLayout linearLayout;
 
+    /**
+     * Odbiornik transmisji, odbiera wartości przekazywane przez AccService
+     * i zapisuje do tablic. Reaguje tylko na wiadomości z etykietą "NEW_ACC_VALUES".
+     * Wywołuje funkcje addAccValuesEntry dodającą wartości osi X,Y,Z na odpowiadające im wykresy.
+     * Wywołuje funkcje isCheckBoxChecked.
+     * Po osiągnięciu przez tablicę HRValues wielkości równej 100 (odpowiadającej 1s) wywołuje funkcję findPeaks.
+     */
     private final BroadcastReceiver accValuesReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (intent.getAction().equals(ACC_VALUES)) {
-                accValues = (ArrayList<Double>) intent.getSerializableExtra("ACC_VALUES");
-                X = accValues.get(0);
-                Y = accValues.get(1);
-                Z = accValues.get(2);
-
-                accXValues.add((float) X);
-                accYValues.add((float) Y);
-                accZValues.add((float) Z);
-                HRValues.add((float) Z);
-
+                ArrayList<Double> accValues = (ArrayList<Double>) intent.getSerializableExtra("ACC_VALUES");
+                double x = accValues.get(0);
+                double y = accValues.get(1);
+                double z = accValues.get(2);
+                accXValues.add((float) x);
+                accYValues.add((float) y);
+                accZValues.add((float) z);
+                HRValues.add((float) z);
                 addAccValuesEntry(accXChart, accXValues, Color.BLUE);
                 addAccValuesEntry(accYChart, accYValues, Color.GREEN);
                 addAccValuesEntry(accZChart, accZValues, Color.RED);
-                IsCheckBoxChecked();
+                isCheckBoxChecked();
                 if (HRValues.size() > 99) {
-                    FindPeaks();
+                    findPeaks();
                 }
             }
         }
     };
 
-    private void FindPeaks() {
-        N = 6;
-        BandpassFilterButterworthImplementation BPF = new BandpassFilterButterworthImplementation(f1, f2, N, f_samp);
+    /**
+     * Znajduje piki sygnału odpowiadające biciu serca. Wywołuje filtr Butterwortha z klasy
+     * BandpassFilterButterworthImplementation na tablicy HRValues, następnie poddaje sygnał
+     * potęgowaniu (funkcja signalSquare), wygładzaniu (funkcja smoothing) i detekcji pików (funkcja peakDetection).
+     * Na końcu wyświetla sygnał na wykresie i podaje obliczoną wg wzoru wartość tętna.
+     */
+    private void findPeaks() {
+        int n = 6;
+        int f_samp = 100;
+        float f2 = 20;
+        float f1 = 15;
+        BandpassFilterButterworthImplementation BPF = new BandpassFilterButterworthImplementation(f1, f2, n, f_samp);
         for (int i = 0; i < HRValues.size(); i++) {
             BPF.compute(HRValues.get(i));
         }
-        HR.SignalSquare(HRValues);
-        HR.Smoothing(windowLength, HRValues);
+        HR.signalSquare(HRValues);
+        int windowLength = 10;
+        HR.smoothing(windowLength, HRValues);
         HRPlotValues.addAll(HRValues);
-        HRVal = HR.PeakDetection(HRValues);
+        int HRVal = HR.peakDetection(HRValues);
         addHRValuesEntry(HRChart, HRPlotValues, Color.RED);
         HRValues.clear();
         if (HRVal > 0) {
             sum = sum + HRVal;
             float val = sum * 100 / i;
             displayedHR.add(index, (double) (val / 100 * 60));
-            textViewText = "TĘTNO " + String.format("%1$.0f", displayedHR.get(displayedHR.size() - 1));
+            String textViewText = "TĘTNO " + String.format("%1$.0f", displayedHR.get(displayedHR.size() - 1));
             HRValue.setText(textViewText);
             i++;
             index++;
@@ -135,6 +210,13 @@ public class PlotActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Wyświetlanie wykresu z wartościami przyśpieszeń odczytanymi z akcelerometru dla osi X, Y i Z.
+     *
+     * @param lineChart  Zmienna przechwująca nazwę wykresu wyświetlającego wartości.
+     * @param val        Lista z wartościami wyświetlanymi na wykresie.
+     * @param color      Kolor wyświetlanej funkcji.
+     */
     private void addAccValuesEntry(LineChart lineChart, ArrayList val, int color) {
         LineData data = lineChart.getData();
 
@@ -172,6 +254,13 @@ public class PlotActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Wyświetlanie wykresu z wartościami HR.
+     *
+     * @param lineChart Zmienna przechwująca nazwę wykresu wyświetlającego wartości.
+     * @param val       Lista z wartościami wyświetlanymi na wykresie.
+     * @param color     Kolor wyświetlanej funkcji.
+     */
     private void addHRValuesEntry(LineChart lineChart, ArrayList val, int color) {
         LineData data = lineChart.getData();
 
@@ -209,6 +298,11 @@ public class PlotActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Usuwanie zestawu danych z wykresu.
+     *
+     * @param chart  Nazwa wykresu.
+     */
     private void removeDataSet(LineChart chart) {
         LineData data = chart.getData();
         if (data != null) {
@@ -218,6 +312,12 @@ public class PlotActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Konfiguracja wykresów danych z akcelerometru, zawiera paramtery wyświetlania osi X i Y.
+     *
+     * @param chart  Nazwa wykresu.
+     * @param label  Nazwa zestawu danych.
+     */
     private void chartConfiguration(LineChart chart, String label) {
         chart.setKeepPositionOnRotation(true);
         chart.getDescription().setEnabled(true);
@@ -253,7 +353,12 @@ public class PlotActivity extends AppCompatActivity {
         xAxis.setValueFormatter(xAxisFormatter);
     }
 
-    private void HRchartConfiguration(LineChart chart) {
+    /**
+     * Konfiguracja wykresu HR, zawiera paramtery wyświetlania osi X i Y.
+     *
+     * @param chart  Nazwa wykresu.
+     */
+    private void hrChartConfiguration(LineChart chart) {
         chart.setKeepPositionOnRotation(true);
         chart.getDescription().setEnabled(true);
         chart.getDescription().setText("Tętno");
@@ -288,7 +393,11 @@ public class PlotActivity extends AppCompatActivity {
         xAxis.setValueFormatter(xAxisFormatter);
     }
 
-    private void IsCheckBoxChecked() {
+    /**
+     * Sprawdza który z checkboxów został zaznaczony.
+     * Wyświetla te wykresy dla których zaznaczono odpowiadający im checkbox.
+     */
+    private void isCheckBoxChecked() {
         width = linearLayout.getWidth();
         height = linearLayout.getHeight();
 
@@ -316,13 +425,20 @@ public class PlotActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Metoda główna aktywności.
+     * Rejestruje odbiornik transmisji accValuesReceiver i tworzy obiekt typu IntentFilter,
+     * który filtruje informacje pochodzące z AccService i pozwala na odbiór tylko tych z etykietą "NEW_ACC_VALUES".
+     * Ustawia szerokość i wysokość layoutu dla prawidłowego wyświetlania wykresów w aplikacji.
+     * Konfiguruje sposoby wyświetlania wykresów (funkcja setLayoutParams).
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_plot);
         ButterKnife.bind(this);
 
-        accValuesIntentFilter = new IntentFilter("NEW_ACC_VALUES");
+        IntentFilter accValuesIntentFilter = new IntentFilter("NEW_ACC_VALUES");
         registerReceiver(accValuesReceiver, accValuesIntentFilter);
 
         accXChart.setLayoutParams(new LinearLayout.LayoutParams(0, 0));
@@ -334,15 +450,20 @@ public class PlotActivity extends AppCompatActivity {
         chartConfiguration(accXChart, "Oś X");
         chartConfiguration(accYChart, "Oś Y");
         chartConfiguration(accZChart, "Oś Z");
-        HRchartConfiguration(HRChart);
+        hrChartConfiguration(HRChart);
     }
 
-
+    /**
+     * Określa zachowanie Aktywności w momencie zatrzymania się aplikacji.
+     */
     @Override
     public void onPause() {
         super.onPause();
     }
 
+    /**
+     * Zakończenie nasłuchu danych przez odbiornik transmisji po wystąpieniu błędu aplikacji.
+     */
     @Override
     public void onDestroy() {
         super.onDestroy();

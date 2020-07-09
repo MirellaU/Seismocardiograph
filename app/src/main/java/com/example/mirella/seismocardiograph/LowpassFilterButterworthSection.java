@@ -1,17 +1,47 @@
 package com.example.mirella.seismocardiograph;
 
-public class LowpassFilterButterworthSection
-{
+/**
+ * Tworzy filtr dolnoprzepustowy Butterwortha.
+ *
+ * @author Mirella
+ * @version 1.0
+ */
+
+public class LowpassFilterButterworthSection {
+    /**
+     * Tworzy obiekt klasy FIRFilterImplementation o zadanym rzędzie filtru.
+     */
     private final FIRFilterImplementation firFilter = new FIRFilterImplementation(3);
+    /**
+     * Tworzy obiekt klasy IIRFilterImplementation o zadanym rzędzie filtru.
+     */
     private final IIRFilterImplementation iirFilter = new IIRFilterImplementation(2);
 
+    /**
+     * Współczynniki filtru FIR.
+     */
     private final double[] a = new double[3];
+
+    /**
+     * Współczynniki filtru IIR.
+     */
     private final double[] b = new double[2];
+
+    /**
+     * Wzmocnienie filtru.
+     */
     private final double gain;
 
+    /**
+     * Tworzy filtr dolnoprzepustowy typu FIR i IIR.
+     *
+     * @param cutoffFrequencyHz Częstotliwość odcięcia w Hz.
+     * @param k                 Współczynnik tłumienia.
+     * @param n                 Długość filtru.
+     * @param Fs                Częstotliwość próbkowania.
+     */
     public LowpassFilterButterworthSection
-            (double cutoffFrequencyHz, double k, double n, double Fs)
-    {
+            (double cutoffFrequencyHz, double k, double n, double Fs) {
         // compute the fixed filter coefficients
         double omegac = 2.0 * Fs * Math.tan(Math.PI * cutoffFrequencyHz / Fs);
         double zeta = -Math.cos(Math.PI * (2.0 * k + n - 1.0) / (2.0 * n));
@@ -31,8 +61,14 @@ public class LowpassFilterButterworthSection
         this.gain = 1.0 / b0;
     }
 
-    public double compute(double input)
-    {
+    /**
+     * Oblicza współczynnik filtru dla pojedyńczej próbki sygnału
+     * w postaci kaskady filtrów FIR i IIR.
+     *
+     * @param input  Próbka sygnału.
+     * @return       Próbka sygnału po filtracji.
+     */
+    public double compute(double input) {
         // compute the result as the cascade of the fir and iir filters
         return this.iirFilter.compute
                 (this.firFilter.compute(this.gain * input, this.a), this.b);

@@ -4,20 +4,38 @@ import android.util.Log;
 
 import java.util.ArrayList;
 
+/**
+ * Klasa analizy sygnału.
+ *
+ * @author Mirella
+ * @version 1.0
+ */
 class HRDetectionActivity {
 
+    /**
+     * TAG używany do odczytu logów z tej Aktywności.
+     */
     private static final String TAG = "HRClass";
 
-    //Potęgowanie sygnału
-    public void SignalSquare(ArrayList<Float> HRValues){
+    /**
+     * Funkcja podnosi każdy element tablicy do kwadratu.
+     *
+     * @param HRValues Tablica z wartościami HR.
+     */
+    public void signalSquare(ArrayList<Float> HRValues){
         for (int i=0; i<HRValues.size(); i++) {
             HRValues.set(i, HRValues.get(i)*HRValues.get(i));
         }
         //Log.d(TAG, "HR po exp: " + HRValues);
     }
 
-    //Filtr ruchomej średniej
-    public void Smoothing(int windowLength, ArrayList<Float> HRValues){
+    /**
+     * Filtr ruchomej średniej.
+     *
+     * @param windowLength Długość okna.
+     * @param HRValues     Tablica z wartościami HR.
+     */
+    public void smoothing(int windowLength, ArrayList<Float> HRValues){
         //windowLength =10?
         float sum =0;
         float temp = 0;
@@ -36,8 +54,13 @@ class HRDetectionActivity {
         //Log.d(TAG, "HR po wyg: " + HRValues);
     }
 
-    //Algorytm detekcji HR
-    public int PeakDetection(ArrayList<Float> HRValues){
+    /**
+     * Detekcja ilości pików w sygnale.
+     *
+     * @param HRValues  Tablica z wartościami HR.
+     * @return          Wykrytą ilość pików w sygnale.
+     */
+    public int peakDetection(ArrayList<Float> HRValues){
         double avr=0;
         int HRValue=0;
         for(int i =0; i<HRValues.size();i++){
@@ -77,5 +100,4 @@ class HRDetectionActivity {
         }
         return HRValue;
     }
-
 }

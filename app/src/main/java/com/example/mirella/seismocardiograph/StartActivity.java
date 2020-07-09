@@ -8,7 +8,6 @@ import android.content.IntentFilter;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -27,15 +26,28 @@ import java.util.Calendar;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-@SuppressWarnings("unchecked")
+/**
+ * Aktywność obsługująca menu aplikacji.
+ * Zarządza sposobem wyświetlania ikon menu w aplikacji, powiadomieniami, uruchamianiem i wyłączaniem serwisu AccService,
+ * odbieraniem i zapisywaniem dancyh z serwisu.
+ *
+ * @author Mirella
+ * @version 1.0
+ */
 public class StartActivity extends AppCompatActivity {
+    /**
+     * TAG używany do odczytu logów z tej Aktywności.
+     */
+    private static final String TAG = "StartActivity";
 
-    private static final String TAG = "AccSensor";
+    /**
+     * Etykieta danych napływających z AccService.
+     */
     private static final String ACC_VALUES = "NEW_ACC_VALUES";
-    private boolean doubleTap = false;
-    private boolean saveToFile = false;
-    private int i = 1;
 
+    /**
+     * Obiekt klasy Menu zawierający String z nazwą ikony i odwołanie do folderu res z ID obrazka przypisanego do ikony.
+     */
     private final Menu[] menu = {
             new Menu(R.string.test_start, R.drawable.start),
             new Menu(R.string.test_stop, R.drawable.stop),
@@ -43,20 +55,44 @@ public class StartActivity extends AppCompatActivity {
             new Menu(R.string.show_plot, R.drawable.plots)
     };
 
-    private ArrayList<Float> accValues = new ArrayList<>();
+    /**
+     * Tablice przechowujące wartości z osi X,Y,Z.
+     */
     private final ArrayList<Float> accSaveXValues = new ArrayList<>();
     private final ArrayList<Float> accSaveYValues = new ArrayList<>();
     private final ArrayList<Float> accSaveZValues = new ArrayList<>();
 
+    /**
+     * Zmienna przechowująca dane o ilości wykonanych badań przy jednym uruchomieniu aplikacji,
+     * używana przy zapisie do pliku .csv w celu nienadpisywania pliku.
+     */
+    private int i = 1;
+
+    /**
+     * Flaga informująca o szybkim, podwójnym kliknięciu na ikonę przez użytkownika.
+     */
+    private boolean doubleTap = false;
+
+    /**
+     * Flaga informująca o tym, czy odbył się już zapis do pliku aktualnego badania.
+     */
+    private boolean saveToFile = false;
+
+    /**
+     * Menu aplikacji.
+     */
     @BindView(R.id.menuGridView)
     GridView menuGridView;
 
+    /**
+     * Odbiornik transmisji, odbiera wartości przekazywane przez AccService
+     * i zapisuje do tablic. Reaguje tylko na wiadomości z etykietą "NEW_ACC_VALUES".
+     */
     private final BroadcastReceiver accValuesReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             if(intent.getAction().equals(ACC_VALUES)) {
-                //noinspection unchecked
-                accValues = (ArrayList<Float>) intent.getSerializableExtra("ACC_VALUES");
+                ArrayList<Float> accValues = (ArrayList<Float>) intent.getSerializableExtra("ACC_VALUES");
                 accSaveXValues.add(accValues.get(0));
                 accSaveYValues.add(accValues.get(1));
                 accSaveZValues.add(accValues.get(2));
@@ -64,7 +100,85 @@ public class StartActivity extends AppCompatActivity {
         }
     };
 
-    private void StartTest(){
+    /**
+     * Inicjalizuje zawartość menu w aktywności.
+     *
+     * @param  menu Menu w którym umieszczono elementy.
+     * @return      True jeżeli chcemy wyświetlić menu w aplikacji.
+     */
+    @Override
+    public boolean onCreateOptionsMenu(android.view.Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.up_menu,menu);
+        return true;
+    }
+
+    /**
+     * Wywoływany za każdym razem po kliknięciu na ikonę "Rozpocznij badanie". W
+     * yświetla informację w oknie dialogowym o sposobie poprawnego przeprowadzania badania.
+     *
+     * @param item  Wybrany obiekt z menu.
+     * @return      Flaga o wykryciu kliknięcia w menu.
+     */
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.info) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle(R.string.ExaminationInfo)
+                    .setMessage(R.string.ExaminationInfoText)
+                    .setPositiveButton(R.string.OK, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            dialog.dismiss();
+                        }
+                    });
+            AlertDialog dialog = builder.create();
+            dialog.getWindow().getAttributes().windowAnimations = R.style.DialogAnimation;
+            dialog.show();
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    /**
+     * Metoda główna aktywności.
+     * Ustawia uklad menu wyświetlany w aktywności, rejestruje odbiornik transmisji accValuesReceiver i tworzy obiekt typu IntentFilter,
+     * który filtruje informacje pochodzące z AccService i pozwala na odbiór tylko tych z etykietą "NEW_ACC_VALUES".
+     * Przypisuje obsługę metod do ikon w aplikacji.
+     */
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_start);
+        ButterKnife.bind(this);
+        IntentFilter accValuesIntentFilter = new IntentFilter("NEW_ACC_VALUES");
+        registerReceiver(accValuesReceiver, accValuesIntentFilter);
+        menuGridView.setAdapter(new MenuAdapter(this,menu));
+        menuGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            public void onItemClick(AdapterView<?> parent,
+                                    View v, int position, long id){
+                if(position==0 && !doubleTap){
+                    startTest();
+                } else if (position==1 && doubleTap){
+                    stopTest();
+                } else if (position==2){
+                    if(!saveToFile) {
+                        Toast.makeText(getApplicationContext(),R.string.ExaminationNotStartInfo,Toast.LENGTH_LONG);
+                    } else {
+                        saveDataToCSV();
+                    }
+                } else if (position==3){
+                    showPlot();
+                }
+            }
+        });
+    }
+
+    /**
+     * Obsługa ikony "Rozpocznij badanie" z menu głównego aplikacji.
+     * Tworzy obiekt typu AlertDialog pytający użytkownika o rozpoczęcie badania.
+     * W razie zgody rozpoczyna działanie serwisu AccService, ustawia flagi doubleTap i saveToFile na true
+     * Przy odmowie zamyka okno AlertDialog i ustawia flagę doubleTap na false.
+     */
+    private void startTest(){
         final Intent serviceIntent = new Intent(this, AccService.class);
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(R.string.ExaminationInfo)
@@ -87,7 +201,13 @@ public class StartActivity extends AppCompatActivity {
         dialog.show();
     }
 
-    private void StopTest(){
+    /**
+     * Obsługa ikony "Zakończ badanie" z menu głównego aplikacji.
+     * Tworzy obiekt typu AlertDialog pytający użytkownika o zakończenie badania.
+     * W razie zgody zatrzymuje dzialanie serwisu AccService i ustawia flagę doubleTap na false..
+     * Przy odmowie zamyka okno AlertDialog i ustawia flagę doubleTap na true..
+     */
+    private void stopTest(){
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(R.string.ExaminationStopInfo)
                 .setMessage(R.string.ExaminationIntentToStop)
@@ -109,18 +229,28 @@ public class StartActivity extends AppCompatActivity {
         dialog.show();
     }
 
-    private void ShowPlot(){
+    /**
+     * Obsługa ikony "Pokaż wykresy" z menu głównego aplikacji.
+     * Przenosi użytkownika do aktywności PlotActivity.
+     */
+    private void showPlot(){
         Intent intent = new Intent(StartActivity.this,PlotActivity.class);
         startActivity(intent);
     }
 
-    private void SaveDataToCSV() {
+    /**
+     * Obsługa ikony "Zapisz wynik badania" z menu głównego aplikacji.
+     * Tworzy obiekt typu AlertDialog pytający użytkownika o zapis do pliku.
+     * W razie zgody zapisuje plik przy pomocy funkcji save() i czyści tablice z wartościami X,Y,Z.
+     * Przy odmowie zamyka okno AlertDialog.
+     */
+    private void saveDataToCSV() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setMessage(R.string.Save)
-                .setPositiveButton(R.string.Save, new DialogInterface.OnClickListener() {
+                .setPositiveButton(R.string.DoSave, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         if(accSaveXValues.size()!=0 && accSaveYValues.size()!=0 && accSaveZValues.size()!=0) {
-                            Save();
+                            save();
                             accSaveXValues.clear();
                             accSaveYValues.clear();
                             accSaveZValues.clear();
@@ -141,7 +271,12 @@ public class StartActivity extends AppCompatActivity {
         dialog.show();
     }
 
-    private void Save(){
+    /**
+     * Metoda zapisuje tablice z wartościami osi X, Y, Z odczytanymi z akcelerometru
+     * do pliku Seismocadriography_data + numer kolejnego badania.csv.
+     * Plik jest zapisywany w pamięci wewnętrznej telefonu w katalogu com.example.nazwa_uzytkownika.seimsocardiograph.
+     */
+    private void save(){
         String timeStamp = new SimpleDateFormat(getString(R.string.dateFormat)).format(Calendar.getInstance().getTime());
         try {
             final File directory = getExternalFilesDir(null); //for external storage
@@ -169,66 +304,5 @@ public class StartActivity extends AppCompatActivity {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_start);
-        ButterKnife.bind(this);
-
-        IntentFilter accValuesIntentFilter = new IntentFilter("NEW_ACC_VALUES");
-        registerReceiver(accValuesReceiver, accValuesIntentFilter);
-
-        menuGridView.setAdapter(new MenuAdapter(this,menu));
-
-        menuGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            public void onItemClick(AdapterView<?> parent,
-                                    View v, int position, long id){
-
-                if(position==0 && !doubleTap){
-                    StartTest();
-                }
-                else if (position==1 && doubleTap){
-                    StopTest();
-                }
-                else if (position==2){
-                    if(!saveToFile) {
-                        Toast.makeText(getApplicationContext(),R.string.ExaminationNotStartInfo,Toast.LENGTH_LONG);
-                    } else {
-                        SaveDataToCSV();
-                    }
-                }
-                else if (position==3){
-                    ShowPlot();
-                }
-
-            }
-        });
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(android.view.Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.up_menu,menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == R.id.info) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle(R.string.ExaminationInfo)
-                    .setMessage(R.string.ExaminationInfoText)
-                    .setPositiveButton(R.string.OK, new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
-                            dialog.dismiss();
-                        }
-                    });
-            AlertDialog dialog = builder.create();
-            dialog.getWindow().getAttributes().windowAnimations = R.style.DialogAnimation;
-            dialog.show();
-        }
-        return super.onOptionsItemSelected(item);
     }
 }
